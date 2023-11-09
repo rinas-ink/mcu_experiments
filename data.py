@@ -10,7 +10,11 @@ def get_p():
     return 2
 
 
-
+def swiss_roll_function(x, y, c1, c2):
+    r = 1 + c2 / 10
+    x_val = (4 / 9 * c1 + 50 / 9) * x * np.cos(2 * np.pi * r * (x - 4) / 12)
+    z_val = (4 / 9 * c1 + 50 / 9) * x * np.sin(2 * np.pi * r * (x - 4) / 12)
+    return x_val, y, z_val
 
 
 def get_meshgrid():
