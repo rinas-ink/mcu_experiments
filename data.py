@@ -28,6 +28,10 @@ def add_noise(x, y, noise_strength=0.5):
     y += np.random.normal(0, noise_strength, y.shape)
 
 
+control_vars_lw = 0
+control_vars_up = 10
+
+
 def get_control_vars(n, size=N):
     return [[random.randint(1, 10) for _ in range(n)] for _ in range(size)]
 

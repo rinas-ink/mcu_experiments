@@ -1,7 +1,8 @@
-from data import generate_array_of_swiss_rolls, get_control_vars, get_p
+from data import generate_array_of_swiss_rolls, get_control_vars, get_p, control_vars_lw, control_vars_up
 import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy
+from scipy.optimize import dual_annealing
 
 
 def standardize(data):
@@ -15,9 +16,13 @@ def center(data):
     return data - means
 
 
+y_scaler = 1
+
+
 def scale(data):
-    scaler = np.average(np.sqrt(np.var(data, axis=0)))
-    return data / scaler
+    global y_scaler
+    y_scaler = np.average(np.sqrt(np.var(data, axis=0)))
+    return data / y_scaler
 
 
 def construct_graph(ys, k):
@@ -53,7 +58,7 @@ def get_eigen_decomposition(q):
     sorted_indices = np.argsort(eigenvalues)[::-1]
     sorted_eigenvalues = eigenvalues[sorted_indices]
     sorted_eigenvectors = eigenvectors[:, sorted_indices]
-    
+
     return sorted_eigenvectors, np.diag(sorted_eigenvalues)
 
 
@@ -69,13 +74,14 @@ def regress(y_, x):
     return np.linalg.inv(x.T.dot(x)).dot(x.T).dot(y_)
 
 
+k = 5  # FIXME
+c = 1e5  # FIXME
+
+
 def maximum_covariance_unfolding_regression(control_vars, response_matrix):
     control_vars = standardize(control_vars)
     response_matrix = center(response_matrix)
     response_matrix = scale(response_matrix)
-
-    k = 5  # FIXME
-    c = 1e5  # FIXME
 
     edges = construct_graph(response_matrix, k)
     q = solve_semidefinite_programming(control_vars, response_matrix, edges, c)
@@ -84,7 +90,7 @@ def maximum_covariance_unfolding_regression(control_vars, response_matrix):
     b = regress(y_, control_vars)
 
     return control_vars, response_matrix, y_, b
-    
+
 
 def compute_rre(ld_embedding, reconstructed_y):
     return np.median(np.linalg.norm(ld_embedding - reconstructed_y, axis=1) / np.linalg.norm(ld_embedding, axis=1))
@@ -97,13 +103,40 @@ def plot_two_embeddings(ld_embedding, reconstructed_y):
     ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=10, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
     rec_plot = fig.add_subplot(1, 2, 2)
     rec_plot.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=10, c=reconstructed_y[:, 0], cmap=plt.cm.Spectral)
+
+    ld_plot.set_xlim(rec_plot.get_xlim())
+    ld_plot.set_ylim(rec_plot.get_ylim())
+
     plt.show()
+
+
+def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix):
+    y_nom = y_nom / y_scaler
+    distances = np.linalg.norm(centered_y - y_nom, axis=1)
+    neighbours = np.argsort(distances)[:k]
+
+    def y_error(v):
+        err_diff = (np.linalg.norm(v - ld_embedding[neighbours], axis=1) -
+                    np.linalg.norm(y_nom - centered_y[neighbours], axis=1))
+        sum_err = np.sum(err_diff ** 2)
+        return sum_err
+
+    def x_error(x):
+        return y_error(np.dot(x, regression_matrix))
+
+    # FIXME Depends on distribution of x we want to make these boundaries bigger or not
+    lw = [control_vars_lw] * get_p()
+    up = [control_vars_up] * get_p()
+
+    x_opt = dual_annealing(x_error, bounds=list(zip(lw, up)))
+    return x_opt.x, x_error(x_opt.x)
 
 
 def main():
     control_vars = get_control_vars(get_p())
     response_matrix = generate_array_of_swiss_rolls(control_vars)
-    standardized_x, centered_y, ld_embedding, regression_matrix = maximum_covariance_unfolding_regression(control_vars, response_matrix)
+    standardized_x, centered_y, ld_embedding, regression_matrix = \
+        maximum_covariance_unfolding_regression(control_vars, response_matrix)
     reconstructed_y = np.dot(standardized_x, regression_matrix)
 
     print(compute_rre(ld_embedding, reconstructed_y))
