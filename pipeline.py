@@ -1,4 +1,4 @@
-from data import generate_array_of_swiss_rolls, get_control_vars, get_p, control_vars_lw, control_vars_up
+from data import generate_array_of_swiss_rolls, get_control_vars, get_p
 import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy
@@ -125,8 +125,8 @@ def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix):
         return y_error(np.dot(x, regression_matrix))
 
     # FIXME Depends on distribution of x we want to make these boundaries bigger or not
-    lw = [control_vars_lw] * get_p()
-    up = [control_vars_up] * get_p()
+    lw = [-3] * get_p()
+    up = [3] * get_p()
 
     x_opt = dual_annealing(x_error, bounds=list(zip(lw, up)))
     return x_opt.x, x_error(x_opt.x)
