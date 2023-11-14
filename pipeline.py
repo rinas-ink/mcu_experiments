@@ -13,16 +13,12 @@ def standardize(data):
 
 def center(data):
     means = np.mean(data, axis=0)
-    return data - means
-
-
-y_scaler = 1
+    return data - means, means
 
 
 def scale(data):
-    global y_scaler
-    y_scaler = np.average(np.sqrt(np.var(data, axis=0)))
-    return data / y_scaler
+    scaler = np.average(np.sqrt(np.var(data, axis=0)))
+    return data / scaler, scaler
 
 
 def construct_graph(ys, k):
@@ -80,8 +76,8 @@ c = 1e5  # FIXME
 
 def maximum_covariance_unfolding_regression(control_vars, response_matrix):
     control_vars = standardize(control_vars)
-    response_matrix = center(response_matrix)
-    response_matrix = scale(response_matrix)
+    response_matrix, y_means = center(response_matrix)
+    response_matrix, y_scaler = scale(response_matrix)
 
     edges = construct_graph(response_matrix, k)
     q = solve_semidefinite_programming(control_vars, response_matrix, edges, c)
@@ -89,7 +85,7 @@ def maximum_covariance_unfolding_regression(control_vars, response_matrix):
     y_ = reduce_dimension(u, s)
     b = regress(y_, control_vars)
 
-    return control_vars, response_matrix, y_, b
+    return control_vars, response_matrix, y_, b, y_means, y_scaler
 
 
 def compute_rre(ld_embedding, reconstructed_y):
@@ -110,23 +106,22 @@ def plot_two_embeddings(ld_embedding, reconstructed_y):
     plt.show()
 
 
-def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix):
-    y_nom = y_nom / y_scaler
+def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler):
+    y_nom = (y_nom - y_means) / y_scaler
     distances = np.linalg.norm(centered_y - y_nom, axis=1)
     neighbours = np.argsort(distances)[:k]
 
     def y_error(v):
-        err_diff = (np.linalg.norm(v - ld_embedding[neighbours], axis=1) -
-                    np.linalg.norm(y_nom - centered_y[neighbours], axis=1))
+        err_diff = (np.linalg.norm(v - ld_embedding[neighbours]) -
+                    np.linalg.norm(y_nom - centered_y[neighbours]))
         sum_err = np.sum(err_diff ** 2)
         return sum_err
 
     def x_error(x):
         return y_error(np.dot(x, regression_matrix))
 
-    # FIXME Depends on distribution of x we want to make these boundaries bigger or not
-    lw = [-3] * get_p()
-    up = [3] * get_p()
+    lw = [-2] * get_p()
+    up = [2] * get_p()
 
     x_opt = dual_annealing(x_error, bounds=list(zip(lw, up)))
     return x_opt.x, x_error(x_opt.x)
