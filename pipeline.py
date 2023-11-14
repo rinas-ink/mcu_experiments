@@ -8,7 +8,7 @@ from scipy.optimize import dual_annealing
 def standardize(data):
     means = np.mean(data, axis=0)
     stds = np.std(data, axis=0)
-    return (data - means) / stds
+    return (data - means) / stds, means, stds
 
 
 def center(data):
@@ -75,7 +75,7 @@ c = 1e5  # FIXME
 
 
 def maximum_covariance_unfolding_regression(control_vars, response_matrix):
-    control_vars = standardize(control_vars)
+    control_vars, x_means, x_stds = standardize(control_vars)
     response_matrix, y_means = center(response_matrix)
     response_matrix, y_scaler = scale(response_matrix)
 
@@ -85,7 +85,7 @@ def maximum_covariance_unfolding_regression(control_vars, response_matrix):
     y_ = reduce_dimension(u, s)
     b = regress(y_, control_vars)
 
-    return control_vars, response_matrix, y_, b, y_means, y_scaler
+    return control_vars, response_matrix, y_, b, y_means, y_scaler, x_means, x_stds
 
 
 def compute_rre(ld_embedding, reconstructed_y):
