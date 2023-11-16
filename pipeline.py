@@ -99,7 +99,8 @@ def compute_rre(ld_embedding, reconstructed_y):
 
 def plot_rre_heatmap(rre, reconstructed_y):
     fig = plt.figure(figsize=(6, 6))
-    scatter = plt.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=15, c=rre, cmap='viridis', edgecolors='w')
+    scatter = plt.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=20, c=rre, cmap='viridis', edgecolors='w',
+                          vmin=0, vmax=0.1)
     cbar = plt.colorbar(scatter)
     plt.show()
 
@@ -112,7 +113,7 @@ def plot_two_embeddings(ld_embedding, reconstructed_y):
     rec_plot.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=10, c=reconstructed_y[:, 0], cmap=plt.cm.Spectral)
 
     ld_plot.set_xlim(rec_plot.get_xlim())
-    ld_plot.set_ylim(rec_plot.get_ylim())
+    ld_plot.set_ylim(-0.005, 0.005)
 
     plt.show()
 
