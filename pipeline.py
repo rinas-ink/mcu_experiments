@@ -113,7 +113,7 @@ def plot_two_embeddings(ld_embedding, reconstructed_y):
     rec_plot.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=10, c=reconstructed_y[:, 0], cmap=plt.cm.Spectral)
 
     ld_plot.set_xlim(rec_plot.get_xlim())
-    ld_plot.set_ylim(-0.005, 0.005)
+    ld_plot.set_ylim(rec_plot.get_ylim())
 
     plt.show()
 
