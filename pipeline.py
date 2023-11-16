@@ -94,11 +94,18 @@ def reduce_dimensions(q):
 
 
 def compute_rre(ld_embedding, reconstructed_y):
-    return np.median(np.linalg.norm(ld_embedding - reconstructed_y, axis=1) / np.linalg.norm(ld_embedding, axis=1))
+    return np.linalg.norm(ld_embedding - reconstructed_y, axis=1) / np.linalg.norm(ld_embedding, axis=1)
+
+
+def plot_rre_heatmap(rre, reconstructed_y):
+    fig = plt.figure(figsize=(6, 6))
+    scatter = plt.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=15, c=rre, cmap='viridis', edgecolors='w')
+    cbar = plt.colorbar(scatter)
+    plt.show()
 
 
 def plot_two_embeddings(ld_embedding, reconstructed_y):
-    fig = plt.figure(figsize=(14, 14))
+    fig = plt.figure(figsize=(14, 7))
     ld_plot = fig.add_subplot(1, 2, 1)
     ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=10, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
     rec_plot = fig.add_subplot(1, 2, 2)
