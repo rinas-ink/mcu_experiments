@@ -103,10 +103,15 @@ def compute_rre(ld_embedding, reconstructed_y):
 def plot_two_embeddings(ld_embedding, reconstructed_y):
     n = ld_embedding.shape[0]
     fig = plt.figure(figsize=(14, 14))
-    ld_plot = fig.add_subplot(1, 2, 1)
-    ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=10, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
+
     rec_plot = fig.add_subplot(1, 2, 2)
     rec_plot.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=10, c=reconstructed_y[:, 0], cmap=plt.cm.Spectral)
+
+    ld_plot = fig.add_subplot(1, 2, 1)
+    ld_plot.set_xlim(rec_plot.get_xlim())
+    ld_plot.set_ylim(rec_plot.get_ylim())
+    ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=10, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
+
     plt.show()
 
 
