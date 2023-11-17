@@ -2,6 +2,7 @@ from data import generate_array_of_swiss_rolls, get_control_vars, get_p
 import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy
+from skimage.filters import threshold_otsu
 
 
 def standardize(data):
@@ -57,11 +58,18 @@ def get_eigen_decomposition(q):
     return sorted_eigenvectors, np.diag(sorted_eigenvalues)
 
 
-def reduce_dimension(eigenvectors, sigma):  # FIXME: add Otsu's threshold
-    # m_ = 1
-    # while np.sum(sigma[:, :m_]) < 0.9 * np.sum(sigma):
-    #     m_ += 1
-    m_ = 2
+def get_optimal_dimensionality(sigma):
+    eigenvalues = np.diagonal(sigma)
+    eigenvalues = eigenvalues[eigenvalues > 0]
+    log_of_eigenvalues = np.log(eigenvalues)
+    threshold = threshold_otsu(log_of_eigenvalues)
+    m_ = 0
+    while m_ < len(log_of_eigenvalues) and log_of_eigenvalues[m_] > threshold:
+        m_ += 1
+    return m_
+
+
+def reduce_dimension(eigenvectors, sigma, m_):
     return np.dot(eigenvectors[:, :m_], np.sqrt(sigma[:m_, :m_]))
 
 
@@ -80,7 +88,9 @@ def maximum_covariance_unfolding_regression(control_vars, response_matrix):
     edges = construct_graph(response_matrix, k)
     q = solve_semidefinite_programming(control_vars, response_matrix, edges, c)
     u, s = get_eigen_decomposition(q)
-    y_ = reduce_dimension(u, s)
+    m_ = control_vars.shape[1]
+    # m_ = get_optimal_dimensionality(s)
+    y_ = reduce_dimension(u, s, m_)
     b = regress(y_, control_vars)
 
     return control_vars, response_matrix, y_, b
