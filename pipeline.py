@@ -74,7 +74,7 @@ def regress(y_, x):
 #   return np.linalg.inv(x.T.dot(x)).dot(x.T).dot(y_)
 
 
-k = 6  # FIXME
+k = 5  # FIXME
 c = 1e5  # FIXME
 
 
@@ -137,3 +137,6 @@ def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, 
 
     x_opt = dual_annealing(x_error, bounds=list(zip(lw, up)))
     return x_opt.x, x_error(x_opt.x)
+
+# def plot_predictive_optimization_error(x_opt, x_real):
+
