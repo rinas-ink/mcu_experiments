@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+
+
 def init_viz():
     fig = plt.figure()
     return fig.add_subplot(111, projection='3d')
@@ -14,6 +16,7 @@ def plot_figure(ax, planes):
     plot_plane(ax, *planes['yz'], color='b')
     plot_plane(ax, *planes['xz'], color='r')
 
+
 def set_limits(ax, initial_point, scale):
     ax.set_xlabel('X Axis')
     ax.set_ylabel('Y Axis')
@@ -25,6 +28,7 @@ def set_limits(ax, initial_point, scale):
 
 def change_view_point(ax):
     ax.view_init(elev=20., azim=30)
+
 
 def set_axes_equal(ax):
     x_limits = ax.get_xlim3d()
@@ -39,11 +43,12 @@ def set_axes_equal(ax):
     y_middle = np.mean(y_limits)
     z_middle = np.mean(z_limits)
 
-    plot_radius = 0.5*max([x_range, y_range, z_range])
+    plot_radius = 0.5 * max([x_range, y_range, z_range])
 
     ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
     ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
     ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
+
 
 def show():
     plt.show()

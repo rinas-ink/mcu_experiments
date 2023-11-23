@@ -87,6 +87,7 @@ def maximum_covariance_unfolding_regression(control_vars, response_matrix):
 
     return control_vars, response_matrix, y_, b
 
+
 def compute_rre(ld_embedding, reconstructed_y):
     return np.median(np.linalg.norm(ld_embedding - reconstructed_y, axis=1) / np.linalg.norm(ld_embedding, axis=1))
 
@@ -103,7 +104,6 @@ def plot_two_embeddings(ld_embedding, reconstructed_y):
 
 def main():
     control_vars = get_array_of_control_vars(get_p(), N)
-    print(control_vars)
     initial_point = (0, 0, 0)
     response_matrix = get_array_of_figures(control_vars, N)
     standardized_x, centered_y, ld_embedding, regression_matrix = maximum_covariance_unfolding_regression(control_vars,

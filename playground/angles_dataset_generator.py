@@ -4,8 +4,6 @@ import numpy as np
 from playground.vizualize import plot_figure, init_viz, show, set_limits, change_view_point
 
 
-
-
 def get_p():
     return 3
 
@@ -41,9 +39,8 @@ def create_plane(point, scale, plane, num=20):
 
 def create_figure(point, scale):
     return [create_plane(point, scale, 'xy'),
-            create_plane(point, scale, 'yz'),
-            create_plane(point, scale, 'xz')]
-
+        create_plane(point, scale, 'yz'),
+        create_plane(point, scale, 'xz')]
 
 def get_control_vars(n=3):
     return [random.randint(get_min_value(), get_max_value()) for _ in range(n)]
@@ -78,7 +75,6 @@ def get_array_of_figures(control_vars, num):
         sample = get_flat_array_of_3d_data(xy, yz, xz)
         samples.append(sample)
     return samples
-
 
 
 if __name__ == '__main__':
