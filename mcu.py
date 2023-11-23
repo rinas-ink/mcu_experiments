@@ -1,4 +1,3 @@
-from data import generate_array_of_swiss_rolls, get_control_vars, get_p
 import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy
@@ -58,11 +57,11 @@ def get_eigen_decomposition(q):
     return sorted_eigenvectors, np.diag(sorted_eigenvalues)
 
 
-def choose_principal_branches(eigenvectors, sigma):  # FIXME: add Otsu's threshold
+def choose_principal_branches(eigenvectors, sigma, m_=2):  # FIXME: add Otsu's threshold
     # m_ = 1
     # while np.sum(sigma[:, :m_]) < 0.9 * np.sum(sigma):
     #     m_ += 1
-    m_ = 2
+
     return np.dot(eigenvectors[:, :m_], np.sqrt(sigma[:m_, :m_]))
 
 
@@ -100,7 +99,7 @@ def compute_rre(ld_embedding, reconstructed_y):
 def plot_rre_heatmap(rre, reconstructed_y):
     fig = plt.figure(figsize=(6, 6))
     scatter = plt.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=20, c=rre, cmap='viridis', edgecolors='w',
-                          vmin=0, vmax=0.1)
+                          vmin=0, vmax=1)
     cbar = plt.colorbar(scatter)
     plt.show()
 
@@ -132,10 +131,8 @@ def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, 
     def x_error(x):
         return y_error(np.dot(x, regression_matrix))
 
-    lw = [-1.3] * get_p()
-    up = [1.3] * get_p()
+    lw = [-1.3] * np.shape(regression_matrix)[1]
+    up = [1.3] * np.shape(regression_matrix)[1]
 
     x_opt = dual_annealing(x_error, bounds=list(zip(lw, up)))
     return x_opt.x, x_error(x_opt.x)
-
-# def plot_predictive_optimization_error(x_opt, x_real):
