@@ -1,9 +1,9 @@
 import random
 import numpy as np
 
-from playground.vizualize import plot_figure, init_viz, show, set_limits, change_view_point
+from vizualize_angles import plot_figure, init_viz, show, set_limits, change_view_point
 
-
+N = 50
 def get_p():
     return 3
 
@@ -42,9 +42,6 @@ def create_figure(point, scale):
         create_plane(point, scale, 'yz'),
         create_plane(point, scale, 'xz')]
 
-def get_control_vars(n=3):
-    return [random.randint(get_min_value(), get_max_value()) for _ in range(n)]
-
 
 def main():
     ax = init_viz()
@@ -58,15 +55,20 @@ def main():
     show()
 
 
-def get_array_of_control_vars(p, n):
-    return [get_control_vars(p) for _ in range(n)]
+def get_control_vars(n=get_p(), size=N):
+    """
+    :param n: dimension of control variable (P from the article)
+    :param size: amount of them
+    :return: ndarray N*P
+    """
+    return np.array([[random.randint(1, 10) for _ in range(n)] for _ in range(size)])
 
 
 def get_flat_array_of_3d_data(x, y, z):
     return np.column_stack((x, y, z)).reshape(-1)
 
 
-def get_array_of_figures(control_vars, num):
+def get_array_of_figures(control_vars, num=N):
     samples = []
     for i in range(num):
         initial_point = (0, 0, 0)
