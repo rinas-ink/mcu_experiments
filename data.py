@@ -29,7 +29,12 @@ def add_noise(x, y, noise_strength=0.5):
 
 
 def get_control_vars(n, size=N):
-    return [[random.randint(1, 10) for _ in range(n)] for _ in range(size)]
+    """
+    :param n: dimension of control variable (P from the article)
+    :param size: amount of them
+    :return: List N*P
+    """
+    return np.array([[random.randint(1, 10) for _ in range(n)] for _ in range(size)])
 
 
 def visualize_swiss_roll(x, y, z):
@@ -47,6 +52,9 @@ def get_flat_array_of_swiss_roll(x_swiss_roll, y_swiss_roll, z_swiss_roll):
 
 
 def generate_array_of_swiss_rolls(control_vars, num=N):
+    """
+    :return: List N*M, where M is from the article = len (all points concatenated)
+    """
     X, Y = get_meshgrid()
     add_noise(X, Y)
     X, Y = X.ravel(), Y.ravel()
