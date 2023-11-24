@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy
 from scipy.optimize import dual_annealing
+from skimage.filters import threshold_otsu
 
 
 def standardize(data):
@@ -58,20 +59,24 @@ def get_eigen_decomposition(q):
     return sorted_eigenvectors, np.diag(sorted_eigenvalues)
 
 
-def choose_principal_branches(eigenvectors, sigma):  # FIXME: add Otsu's threshold
-    # m_ = 1
-    # while np.sum(sigma[:, :m_]) < 0.9 * np.sum(sigma):
-    #     m_ += 1
-    m_ = 2
+def get_optimal_dimensionality(sigma):
+    eigenvalues = np.diagonal(sigma)
+    eigenvalues = eigenvalues[eigenvalues > 0]
+    log_of_eigenvalues = np.log(eigenvalues)
+    threshold = threshold_otsu(log_of_eigenvalues)
+    m_ = 0
+    while m_ < len(log_of_eigenvalues) and log_of_eigenvalues[m_] > threshold:
+        m_ += 1
+    return m_
+
+
+def reduce_dimension(eigenvectors, sigma, m_):
     return np.dot(eigenvectors[:, :m_], np.sqrt(sigma[:m_, :m_]))
 
 
 def regress(y_, x):
     B, _, _, _ = np.linalg.lstsq(x.T.dot(x), x.T.dot(y_), rcond=None)
     return B
-
-
-#   return np.linalg.inv(x.T.dot(x)).dot(x.T).dot(y_)
 
 
 k = 5  # FIXME
@@ -87,9 +92,9 @@ def prepare_data(control_vars, response_matrix):
     return control_vars, response_matrix, edges, y_means, y_scaler, x_means, x_stds
 
 
-def reduce_dimensions(q):
+def reduce_dimensions(q, m_):
     u, s = get_eigen_decomposition(q)
-    y_ = choose_principal_branches(u, s)
+    y_ = reduce_dimension(u, s, m_)
     return y_
 
 

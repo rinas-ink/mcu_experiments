@@ -34,7 +34,7 @@ def get_control_vars(n, size=N):
     :param size: amount of them
     :return: List N*P
     """
-    return [[random.randint(1, 10) for _ in range(n)] for _ in range(size)]
+    return np.array([[random.randint(1, 10) for _ in range(n)] for _ in range(size)])
 
 
 def visualize_swiss_roll(x, y, z):
