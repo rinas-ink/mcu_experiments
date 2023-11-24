@@ -1,4 +1,4 @@
-from angles_dataset_generator import get_control_vars, get_array_of_figures
+from angles_dataset_generator import get_set_of_control_vars, get_array_of_figures
 import matplotlib.pyplot as plt
 import numpy as np
 from mcu import prepare_data, construct_graph, get_k, solve_semidefinite_programming, \
@@ -45,7 +45,7 @@ def plot_two_embeddings(ld_embedding, reconstructed_y):
 
 
 def main():
-    control_vars = get_control_vars()
+    control_vars = get_set_of_control_vars()
     response_matrix = get_array_of_figures(control_vars)
     standardized_x, centered_y, ld_embedding, regression_matrix = maximum_covariance_unfolding_regression(control_vars,
                                                                                                           response_matrix)

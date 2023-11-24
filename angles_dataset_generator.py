@@ -4,6 +4,8 @@ import numpy as np
 from vizualize_angles import plot_figure, init_viz, show, set_limits, change_view_point
 
 N = 50
+
+
 def get_p():
     return 3
 
@@ -13,7 +15,7 @@ def get_max_value():
 
 
 def get_min_value():
-    return 15
+    return 12
 
 
 def add_noise(A, B, C, noise_level=0.05):
@@ -39,8 +41,8 @@ def create_plane(point, scale, plane, num=20):
 
 def create_figure(point, scale):
     return [create_plane(point, scale, 'xy'),
-        create_plane(point, scale, 'yz'),
-        create_plane(point, scale, 'xz')]
+            create_plane(point, scale, 'yz'),
+            create_plane(point, scale, 'xz')]
 
 
 def main():
@@ -51,17 +53,20 @@ def main():
     plot_figure(ax, planes)
     set_limits(ax, 0, get_max_value())
     change_view_point(ax)
-
     show()
 
 
-def get_control_vars(n=get_p(), size=N):
+def get_control_vars(n=get_p()):
+    return np.array([random.randint(get_min_value(), get_max_value()) for _ in range(n)])
+
+
+def get_set_of_control_vars(n=get_p(), size=N):
     """
     :param n: dimension of control variable (P from the article)
-    :param size: amount of them
+    :param size: amount of them (N from the article)
     :return: ndarray N*P
     """
-    return np.array([[random.randint(1, 10) for _ in range(n)] for _ in range(size)])
+    return np.array([[random.randint(get_min_value(), get_max_value()) for _ in range(n)] for _ in range(size)])
 
 
 def get_flat_array_of_3d_data(x, y, z):

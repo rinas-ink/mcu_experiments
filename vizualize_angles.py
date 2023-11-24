@@ -12,9 +12,9 @@ def plot_plane(ax, x, y, z, color):
 
 
 def plot_figure(ax, planes):
-    plot_plane(ax, *planes['xy'], color='g')
-    plot_plane(ax, *planes['yz'], color='b')
-    plot_plane(ax, *planes['xz'], color='r')
+    plot_plane(ax, *planes[0], color='g')
+    plot_plane(ax, *planes[1], color='b')
+    plot_plane(ax, *planes[2], color='r')
 
 
 def set_limits(ax, initial_point, scale):
