@@ -73,8 +73,8 @@ def regress(y_, x):
 #   return np.linalg.inv(x.T.dot(x)).dot(x.T).dot(y_)
 
 
-k = 5  # FIXME
-c = 1e5  # FIXME
+k = 4  # FIXME
+c = 1e6  # FIXME
 
 
 def prepare_data(control_vars, response_matrix):

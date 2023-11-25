@@ -43,10 +43,10 @@ def get_flat_array_of_cylinder(points):
     return np.column_stack(points).reshape(-1)
 
 
-def generate_array_of_cylinders(control_vars, noise_level=0.1, num=N):
+def generate_array_of_cylinders(control_vars, noise_level=0.1, num=N, num_points=100):
     cylinders = []
     for height, radius in control_vars:
-        cylinder = generate_random_cylinder_points(height, radius, 100)
+        cylinder = generate_random_cylinder_points(height, radius, num_points)
         cylinder = add_noise_to_points(cylinder)
         cylinder = get_flat_array_of_cylinder(cylinder)
         cylinders.append(cylinder)
