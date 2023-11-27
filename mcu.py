@@ -30,7 +30,7 @@ def construct_graph(ys, k):
     return np.unique(edges, axis=0)
 
 
-def solve_semidefinite_programming(xs, ys, edges):
+def solve_semidefinite_programming(xs, ys, edges, c):
     n = xs.shape[0]
     p = np.dot(ys, ys.T)
     q = cvxpy.Variable((n, n), symmetric=True)
@@ -73,11 +73,7 @@ def regress(y_, x):
 #   return np.linalg.inv(x.T.dot(x)).dot(x.T).dot(y_)
 
 
-k = 4  # FIXME
-c = 1e6  # FIXME
-
-
-def prepare_data(control_vars, response_matrix):
+def prepare_data(control_vars, response_matrix, k):
     control_vars, x_means, x_stds = standardize(control_vars)
     response_matrix, y_means = center(response_matrix)
     response_matrix, y_scaler = scale(response_matrix)
@@ -117,7 +113,7 @@ def plot_two_embeddings(ld_embedding, reconstructed_y):
     plt.show()
 
 
-def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler):
+def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler, k):
     y_nom = (y_nom - y_means) / y_scaler
     distances = np.linalg.norm(centered_y - y_nom, axis=1)
     neighbours = np.argsort(distances)[:k]

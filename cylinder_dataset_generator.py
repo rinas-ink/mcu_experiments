@@ -1,3 +1,4 @@
+import math
 import random
 
 import numpy as np
@@ -10,7 +11,17 @@ def get_p():
     return 2
 
 
-def get_control_vars(size=N):
+def get_control_vars(size=N, lw=1, up=10):
+    height = np.linspace(lw, up, int(math.sqrt(size)))
+    width = np.linspace(lw, up, int(math.sqrt(size)))
+
+    x_grid, y_grid = np.meshgrid(height, width)
+
+    pairs = np.vstack([x_grid.ravel(), y_grid.ravel()]).T
+    return pairs
+
+
+def get_random_control_vars(size=N):
     return [[random.random() * 10 for _ in range(get_p())] for _ in range(size)]
 
 
@@ -43,11 +54,11 @@ def get_flat_array_of_cylinder(points):
     return np.column_stack(points).reshape(-1)
 
 
-def generate_array_of_cylinders(control_vars, noise_level=0.1, num=N, num_points=100):
+def generate_array_of_cylinders(control_vars, noise_level=0.1, num_points=100):
     cylinders = []
     for height, radius in control_vars:
         cylinder = generate_random_cylinder_points(height, radius, num_points)
-        cylinder = add_noise_to_points(cylinder)
+        cylinder = add_noise_to_points(cylinder, noise_level)
         cylinder = get_flat_array_of_cylinder(cylinder)
         cylinders.append(cylinder)
     return np.array(cylinders)
