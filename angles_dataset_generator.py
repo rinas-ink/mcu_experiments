@@ -10,12 +10,12 @@ def get_p():
     return 3
 
 
+def get_min_value():
+    return 1
+
+
 def get_max_value():
     return 50
-
-
-def get_min_value():
-    return 12
 
 
 def add_noise(A, B, C, noise_level=0.05):
@@ -24,7 +24,7 @@ def add_noise(A, B, C, noise_level=0.05):
     C += np.random.normal(0, noise_level, C.shape)
 
 
-def create_plane(point, scale, plane, num=20):
+def create_plane(point, scale, plane, num=20, noise=False):
     axes = {'xy': (0, 1, 2), 'yz': (1, 2, 0), 'xz': (0, 2, 1)}
     a_idx, b_idx, c_idx = axes[plane]
 
@@ -33,7 +33,8 @@ def create_plane(point, scale, plane, num=20):
     A, B = np.meshgrid(a, b)
     C = np.full_like(A, point[c_idx])
 
-    add_noise(A, B, C)
+    if noise:
+        add_noise(A, B, C)
 
     planes = {'xy': (A, B, C), 'yz': (C, A, B), 'xz': (A, C, B)}
     return planes[plane]
@@ -60,13 +61,24 @@ def get_control_vars(n=get_p()):
     return np.array([random.randint(get_min_value(), get_max_value()) for _ in range(n)])
 
 
-def get_set_of_control_vars(n=get_p(), size=N):
+def get_array_of_control_vars(n=get_p(), size=N):
     """
     :param n: dimension of control variable (P from the article)
     :param size: amount of them (N from the article)
     :return: ndarray N*P
     """
-    return np.array([[random.randint(get_min_value(), get_max_value()) for _ in range(n)] for _ in range(size)])
+
+    return [get_control_vars(n) for _ in range(size)]
+
+
+def get_set_of_control_vars_for_test(n=get_p(), size=N):
+    matrix = np.zeros((size, n))
+
+    for i in range(size):
+        for j in range(n):
+            matrix[i, j] = (i + j) % size + 1
+
+    return matrix
 
 
 def get_flat_array_of_3d_data(x, y, z):

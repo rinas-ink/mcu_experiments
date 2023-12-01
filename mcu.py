@@ -102,6 +102,10 @@ def reduce_dimensions(q, m_):
     return y_
 
 
+def compute_rre_median(ld_embedding, reconstructed_y):
+    return np.median(np.linalg.norm(ld_embedding - reconstructed_y, axis=1) / np.linalg.norm(ld_embedding, axis=1))
+
+
 def compute_rre(ld_embedding, reconstructed_y):
     return np.linalg.norm(ld_embedding - reconstructed_y, axis=1) / np.linalg.norm(ld_embedding, axis=1)
 
@@ -111,6 +115,26 @@ def plot_rre_heatmap(rre, reconstructed_y):
     scatter = plt.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=20, c=rre, cmap='viridis', edgecolors='w',
                           vmin=0, vmax=0.1)
     cbar = plt.colorbar(scatter)
+    plt.show()
+
+
+def plot_two_embeddings_3d(ld_embedding, reconstructed_y):
+    slices = [slice(None, 2), slice(1, None), [0, -1]]
+    n_slices = len(slices)
+
+    fig, axs = plt.subplots(n_slices, 2, figsize=(15, 5 * n_slices))
+
+    for i, sl in enumerate(slices):
+        ld_emb_slice = ld_embedding[:, sl]
+        rec_y_slice = reconstructed_y[:, sl]
+        axs[i, 0].scatter(ld_emb_slice[:, 0], ld_emb_slice[:, 1], s=10, c=ld_emb_slice[:, 0], cmap=plt.cm.Spectral)
+        axs[i, 1].scatter(rec_y_slice[:, 0], rec_y_slice[:, 1], s=10, c=rec_y_slice[:, 0], cmap=plt.cm.Spectral)
+
+        rre = compute_rre_median(ld_emb_slice, rec_y_slice)
+
+        axs[i, 0].set_title(f'ld_embedding (slice {i + 1}), RRE: {rre:.6f}')
+        axs[i, 1].set_title(f'reconstructed_y (slice {i + 1}), RRE: {rre:.6f}')
+
     plt.show()
 
 
