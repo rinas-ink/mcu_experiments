@@ -101,6 +101,10 @@ def reduce_dimensions(q, m_):
 def compute_rre(ld_embedding, reconstructed_y):
     return np.linalg.norm(ld_embedding - reconstructed_y, axis=1) / np.linalg.norm(ld_embedding, axis=1)
 
+def diff_of_edges_lengths(ld_embedding, reconstructed_y, edges):
+    edge_lengths_ld = np.linalg.norm(ld_embedding[edges[:, 0]] - ld_embedding[edges[:, 1]], axis=1)
+    edge_lengths_rec = np.linalg.norm(reconstructed_y[edges[:, 0]] - reconstructed_y[edges[:, 1]], axis=1)
+    return edge_lengths_ld - edge_lengths_rec
 
 def plot_rre_heatmap(rre, reconstructed_y):
     fig = plt.figure(figsize=(6, 6))
@@ -120,6 +124,21 @@ def plot_two_embeddings(ld_embedding, reconstructed_y):
     ld_plot.set_ylim(rec_plot.get_ylim())
     ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=10, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
 
+    plt.show()
+
+def plot_two_embeddings_with_edges(ld_embedding, reconstructed_y, edges):
+    fig = plt.figure(figsize=(14, 7))
+    rec_plot = fig.add_subplot(1, 2, 2)
+    rec_plot.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=50, c=reconstructed_y[:, 0], cmap=plt.cm.Spectral)
+
+    ld_plot = fig.add_subplot(1, 2, 1)
+    ld_plot.set_xlim(rec_plot.get_xlim())
+    ld_plot.set_ylim(rec_plot.get_ylim())
+    ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=50, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
+
+    for i, j in edges:
+        rec_plot.arrow(reconstructed_y[i, 0], reconstructed_y[i, 1], (reconstructed_y[j, 0] - reconstructed_y[i, 0]), (reconstructed_y[j, 1] - reconstructed_y[i, 1]))
+        ld_plot.arrow(ld_embedding[i, 0], ld_embedding[i, 1], (ld_embedding[j, 0] - ld_embedding[i, 0]), (ld_embedding[j, 1] - ld_embedding[i, 1]))
     plt.show()
 
 
