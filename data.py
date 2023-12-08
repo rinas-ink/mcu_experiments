@@ -1,9 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import random
 
-N = 300
+N = 200
 
 
 def get_p():
@@ -34,7 +33,7 @@ def get_control_vars(n, size=N):
     :param size: amount of them
     :return: List N*P
     """
-    return np.array([[random.randint(1, 10) for _ in range(n)] for _ in range(size)])
+    return np.array([[np.random.randint(1, 11) for _ in range(n)] for _ in range(size)])
 
 
 def visualize_swiss_roll(x, y, z):
