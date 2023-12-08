@@ -2,6 +2,7 @@ from data import generate_array_of_swiss_rolls, get_control_vars, get_p
 import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy
+from itertools import combinations
 from scipy.optimize import dual_annealing
 from skimage.filters import threshold_otsu
 
@@ -26,8 +27,8 @@ def construct_graph(ys, k):
     edges = np.empty((0, 2), dtype=int)
     for y in ys:
         distances = np.linalg.norm(ys - y, axis=1)
-        neighbours = np.argsort(distances)[:k]
-        all_pairs = np.stack(np.meshgrid(neighbours, neighbours), axis=1).reshape(-1, 2)
+        neighbours = np.argsort(distances)[:k+1]
+        all_pairs = np.array(list(combinations(neighbours, 2)))
         edges = np.vstack((edges, all_pairs))
     return np.unique(edges, axis=0)
 
@@ -129,16 +130,16 @@ def plot_two_embeddings(ld_embedding, reconstructed_y):
 def plot_two_embeddings_with_edges(ld_embedding, reconstructed_y, edges):
     fig = plt.figure(figsize=(14, 7))
     rec_plot = fig.add_subplot(1, 2, 2)
-    rec_plot.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=50, c=reconstructed_y[:, 0], cmap=plt.cm.Spectral)
+    rec_plot.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=25, c=reconstructed_y[:, 0], cmap=plt.cm.Spectral)
 
     ld_plot = fig.add_subplot(1, 2, 1)
     ld_plot.set_xlim(rec_plot.get_xlim())
     ld_plot.set_ylim(rec_plot.get_ylim())
-    ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=50, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
+    ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=25, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
 
     for i, j in edges:
-        rec_plot.arrow(reconstructed_y[i, 0], reconstructed_y[i, 1], (reconstructed_y[j, 0] - reconstructed_y[i, 0]), (reconstructed_y[j, 1] - reconstructed_y[i, 1]))
-        ld_plot.arrow(ld_embedding[i, 0], ld_embedding[i, 1], (ld_embedding[j, 0] - ld_embedding[i, 0]), (ld_embedding[j, 1] - ld_embedding[i, 1]))
+        rec_plot.plot([reconstructed_y[i, 0], reconstructed_y[j, 0]], [reconstructed_y[i, 1], reconstructed_y[j, 1]], color='black', linestyle='-', linewidth=1)
+        ld_plot.plot([ld_embedding[i, 0], ld_embedding[j, 0]], [ld_embedding[i, 1], ld_embedding[j, 1]], color='black', linestyle='-', linewidth=1)
     plt.show()
 
 
