@@ -33,8 +33,9 @@ def generate_random_cylinder_points(height, radius, num_points=100):
     y = radius * np.sin(angles)
 
     points = np.column_stack((x, y, heights))
-
-    return points
+    sorted_indices = np.lexsort((points[:, 1], points[:, 0]))
+    return points[sorted_indices]
+    # return points
 
 
 def add_noise_to_points(points, noise_level=0.1):

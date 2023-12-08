@@ -95,7 +95,7 @@ def compute_rre(ld_embedding, reconstructed_y):
 def plot_rre_heatmap(rre, reconstructed_y):
     fig = plt.figure(figsize=(6, 6))
     scatter = plt.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=20, c=rre, cmap='viridis', edgecolors='w',
-                          vmin=0, vmax=1)
+                          vmin=0)
     cbar = plt.colorbar(scatter)
     plt.show()
 
