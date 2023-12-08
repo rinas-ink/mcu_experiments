@@ -24,7 +24,7 @@ def add_noise(A, B, C, noise_level=0.05):
     C += np.random.normal(0, noise_level, C.shape)
 
 
-def create_plane(point, scale, plane, num=20, noise=False):
+def create_plane(point, scale, plane, noise, num=20):
     axes = {'xy': (0, 1, 2), 'yz': (1, 2, 0), 'xz': (0, 2, 1)}
     a_idx, b_idx, c_idx = axes[plane]
 
@@ -40,10 +40,10 @@ def create_plane(point, scale, plane, num=20, noise=False):
     return planes[plane]
 
 
-def create_figure(point, scale):
-    return [create_plane(point, scale, 'xy'),
-            create_plane(point, scale, 'yz'),
-            create_plane(point, scale, 'xz')]
+def create_figure(point, scale, noise=True):
+    return [create_plane(point, scale, 'xy', noise),
+            create_plane(point, scale, 'yz', noise),
+            create_plane(point, scale, 'xz', noise)]
 
 
 def main():
@@ -84,12 +84,12 @@ def get_flat_array_of_3d_data(x, y, z):
     return np.column_stack((x, y, z)).reshape(-1)
 
 
-def get_array_of_figures(control_vars, num=N):
+def get_array_of_figures(control_vars, num=N, noise=True):
     samples = []
     for i in range(num):
         initial_point = (0, 0, 0)
         length, width, height = control_vars[i]
-        xy, yz, xz = create_figure(initial_point, scale=(length, width, height))
+        xy, yz, xz = create_figure(initial_point, scale=(length, width, height), noise=noise)
         sample = get_flat_array_of_3d_data(xy, yz, xz)
         samples.append(sample)
     return samples

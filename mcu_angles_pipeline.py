@@ -17,8 +17,8 @@ def maximum_covariance_unfolding_regression(control_vars, response_matrix):
 
 
 def main(noise=True):
-    control_vars = get_array_of_control_vars(noise)
-    response_matrix = get_array_of_figures(control_vars)
+    control_vars = get_array_of_control_vars(noise=noise)
+    response_matrix = get_array_of_figures(control_vars, noise=noise)
     standardized_x, centered_y, ld_embedding, regression_matrix = maximum_covariance_unfolding_regression(control_vars,
                                                                                                           response_matrix)
     reconstructed_y = np.dot(standardized_x, regression_matrix)
@@ -27,4 +27,5 @@ def main(noise=True):
 
 
 if __name__ == '__main__':
-    main()
+    main(False)
+
