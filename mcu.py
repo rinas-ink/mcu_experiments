@@ -1,4 +1,4 @@
-from data import generate_array_of_swiss_rolls, get_control_vars, get_p
+from swiss_roll_dataset_generator import get_p
 import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy
@@ -22,6 +22,14 @@ def scale(data):
     return data / scaler, scaler
 
 
+def get_k():
+    return 5  # FIXME
+
+
+def get_c():
+    return 1e5  # FIXME
+
+
 def construct_graph(ys, k):
     edges = np.empty((0, 2), dtype=int)
     for y in ys:
@@ -36,7 +44,7 @@ def solve_semidefinite_programming(xs, ys, edges):
     n = xs.shape[0]
     p = np.dot(ys, ys.T)
     q = cvxpy.Variable((n, n), symmetric=True)
-
+    c = get_c()
     constraints = [q >> 0]
     constraints += [cvxpy.trace(np.ones((n, n)) @ q) == 0]
     constraints += [cvxpy.trace(q) <= (n - 1) * c]
@@ -79,15 +87,11 @@ def regress(y_, x):
     return B
 
 
-k = 5  # FIXME
-c = 1e5  # FIXME
-
-
 def prepare_data(control_vars, response_matrix):
     control_vars, x_means, x_stds = standardize(control_vars)
     response_matrix, y_means = center(response_matrix)
     response_matrix, y_scaler = scale(response_matrix)
-
+    k = get_k()
     edges = construct_graph(response_matrix, k)
     return control_vars, response_matrix, edges, y_means, y_scaler, x_means, x_stds
 
@@ -96,6 +100,10 @@ def reduce_dimensions(q, m_):
     u, s = get_eigen_decomposition(q)
     y_ = reduce_dimension(u, s, m_)
     return y_
+
+
+def compute_rre_median(ld_embedding, reconstructed_y):
+    return np.median(np.linalg.norm(ld_embedding - reconstructed_y, axis=1) / np.linalg.norm(ld_embedding, axis=1))
 
 
 def compute_rre(ld_embedding, reconstructed_y):
@@ -107,6 +115,26 @@ def plot_rre_heatmap(rre, reconstructed_y):
     scatter = plt.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=20, c=rre, cmap='viridis', edgecolors='w',
                           vmin=0, vmax=0.1)
     cbar = plt.colorbar(scatter)
+    plt.show()
+
+
+def plot_two_embeddings_3d(ld_embedding, reconstructed_y):
+    slices = [slice(None, 2), slice(1, None), [0, -1]]
+    n_slices = len(slices)
+
+    fig, axs = plt.subplots(n_slices, 2, figsize=(15, 5 * n_slices))
+
+    for i, sl in enumerate(slices):
+        ld_emb_slice = ld_embedding[:, sl]
+        rec_y_slice = reconstructed_y[:, sl]
+        axs[i, 0].scatter(ld_emb_slice[:, 0], ld_emb_slice[:, 1], s=10, c=ld_emb_slice[:, 0], cmap=plt.cm.Spectral)
+        axs[i, 1].scatter(rec_y_slice[:, 0], rec_y_slice[:, 1], s=10, c=rec_y_slice[:, 0], cmap=plt.cm.Spectral)
+
+        rre = compute_rre_median(ld_emb_slice, rec_y_slice)
+
+        axs[i, 0].set_title(f'ld_embedding (slice {i + 1}), RRE: {rre:.6f}')
+        axs[i, 1].set_title(f'reconstructed_y (slice {i + 1}), RRE: {rre:.6f}')
+
     plt.show()
 
 
@@ -123,7 +151,7 @@ def plot_two_embeddings(ld_embedding, reconstructed_y):
     plt.show()
 
 
-def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler):
+def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler, k=get_k()):
     y_nom = (y_nom - y_means) / y_scaler
     distances = np.linalg.norm(centered_y - y_nom, axis=1)
     neighbours = np.argsort(distances)[:k]
