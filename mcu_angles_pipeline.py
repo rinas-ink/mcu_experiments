@@ -1,4 +1,4 @@
-from angles_dataset_generator import get_set_of_control_vars_for_test, get_array_of_control_vars, get_array_of_figures
+from angles_dataset_generator import get_array_of_control_vars, get_array_of_figures
 import numpy as np
 from mcu import prepare_data, solve_semidefinite_programming, \
     get_eigen_decomposition, regress, plot_two_embeddings_3d, reduce_dimension
@@ -16,22 +16,11 @@ def maximum_covariance_unfolding_regression(control_vars, response_matrix):
     return standardized_x, centered_y, y_, b
 
 
-def without_noise_and_random():
-    control_vars = get_set_of_control_vars_for_test()
-
+def main(noise=True):
+    control_vars = get_array_of_control_vars(noise)
     response_matrix = get_array_of_figures(control_vars)
     standardized_x, centered_y, ld_embedding, regression_matrix = maximum_covariance_unfolding_regression(control_vars,
-                                                                                                          response_matrix)  # !!!!!
-    reconstructed_y = np.dot(standardized_x, regression_matrix)
-
-    plot_two_embeddings_3d(ld_embedding, reconstructed_y)
-
-
-def main():
-    control_vars = get_array_of_control_vars()
-    response_matrix = get_array_of_figures(control_vars)
-    standardized_x, centered_y, ld_embedding, regression_matrix = maximum_covariance_unfolding_regression(control_vars,
-                                                                                                          response_matrix)  # !!!!!
+                                                                                                          response_matrix)
     reconstructed_y = np.dot(standardized_x, regression_matrix)
 
     plot_two_embeddings_3d(ld_embedding, reconstructed_y)

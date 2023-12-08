@@ -61,24 +61,23 @@ def get_control_vars(n=get_p()):
     return np.array([random.randint(get_min_value(), get_max_value()) for _ in range(n)])
 
 
-def get_array_of_control_vars(n=get_p(), size=N):
+def get_array_of_control_vars(noise=True, n=get_p(), size=N):
     """
+    :param noise: return random matrix if True
     :param n: dimension of control variable (P from the article)
     :param size: amount of them (N from the article)
     :return: ndarray N*P
     """
+    if noise:
+        return [get_control_vars(n) for _ in range(size)]
+    else:
+        matrix = np.zeros((size, n))
 
-    return [get_control_vars(n) for _ in range(size)]
+        for i in range(size):
+            for j in range(n):
+                matrix[i, j] = (i + j) % size + 1
 
-
-def get_set_of_control_vars_for_test(n=get_p(), size=N):
-    matrix = np.zeros((size, n))
-
-    for i in range(size):
-        for j in range(n):
-            matrix[i, j] = (i + j) % size + 1
-
-    return matrix
+        return matrix
 
 
 def get_flat_array_of_3d_data(x, y, z):
