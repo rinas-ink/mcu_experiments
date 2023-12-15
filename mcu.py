@@ -151,7 +151,7 @@ def plot_two_embeddings(ld_embedding, reconstructed_y):
     plt.show()
 
 
-def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler, k=get_k()):
+def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler, k=get_k(), p=get_p()):
     y_nom = (y_nom - y_means) / y_scaler
     distances = np.linalg.norm(centered_y - y_nom, axis=1)
     neighbours = np.argsort(distances)[:k]
@@ -165,8 +165,8 @@ def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, 
     def x_error(x):
         return y_error(np.dot(x, regression_matrix))
 
-    lw = [-1.3] * get_p()
-    up = [1.3] * get_p()
+    lw = [-1.3] * p
+    up = [1.3] * p
 
     x_opt = dual_annealing(x_error, bounds=list(zip(lw, up)))
     return x_opt.x, x_error(x_opt.x)

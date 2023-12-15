@@ -1,7 +1,6 @@
 import random
 import numpy as np
-
-from vizualize_angles import plot_figure, init_viz, show, set_limits, change_view_point
+from vizualize_angles import plot_figure, init_viz, show, set_labels, set_title
 
 N = 50
 
@@ -40,42 +39,69 @@ def create_plane(point, scale, plane, noise, num=20):
     return planes[plane]
 
 
-def create_figure(point, scale, noise=True):
-    return [create_plane(point, scale, 'xy', noise),
-            create_plane(point, scale, 'yz', noise),
-            create_plane(point, scale, 'xz', noise)]
+def get_radians(angles):
+    return map(np.radians, angles)
 
 
-def main():
-    ax = init_viz()
-    initial_point = (0, 0, 0)
-    scale = get_control_vars(get_p())
-    planes = create_figure(initial_point, scale)
-    plot_figure(ax, planes)
-    set_limits(ax, 0, get_max_value())
-    change_view_point(ax)
-    show()
+def get_rotation_matrix(angle_x_rad, angle_y_rad, angle_z_rad):
+    rotation_x = np.array([[1, 0, 0],
+                           [0, np.cos(angle_x_rad), -np.sin(angle_x_rad)],
+                           [0, np.sin(angle_x_rad), np.cos(angle_x_rad)]])
+
+    rotation_y = np.array([[np.cos(angle_y_rad), 0, np.sin(angle_y_rad)],
+                           [0, 1, 0],
+                           [-np.sin(angle_y_rad), 0, np.cos(angle_y_rad)]])
+
+    rotation_z = np.array([[np.cos(angle_z_rad), -np.sin(angle_z_rad), 0],
+                           [np.sin(angle_z_rad), np.cos(angle_z_rad), 0],
+                           [0, 0, 1]])
+
+    return np.dot(rotation_z, np.dot(rotation_y, rotation_x))
 
 
-def get_control_vars(n=get_p()):
-    return np.array([random.randint(get_min_value(), get_max_value()) for _ in range(n)])
+def rotate_planes(planes, rotation_matrix):
+    rotated_planes = []
+    for plane in planes:
+        xy, yz, xz = plane
+        rotated_points = np.dot(rotation_matrix, np.array([xy.ravel(), yz.ravel(), xz.ravel()]))
+        xy_rotated, yz_rotated, xz_rotated = rotated_points.reshape(3, xy.shape[0], xy.shape[1])
+        rotated_planes.append((xy_rotated, yz_rotated, xz_rotated))
+    return rotated_planes
 
 
-def get_array_of_control_vars(noise=True, n=get_p(), size=N):
+def create_figure(point, scale, noise=True, angles=(0, 0, 0)):
+    planes = [create_plane(point, scale, 'xy', noise),
+              create_plane(point, scale, 'yz', noise),
+              create_plane(point, scale, 'xz', noise)]
+
+    rotation_matrix = get_rotation_matrix(*get_radians(angles))
+    rotated_planes = rotate_planes(planes, rotation_matrix)
+
+    return rotated_planes
+
+
+def get_control_vars(n=get_p(), min_value=get_min_value(), max_value=get_max_value()):
+    return np.array([random.randint(min_value, max_value) for _ in range(n)])
+
+
+def get_array_of_control_vars(noise=True, dim=get_p(), size=N,
+                              min_value=get_min_value(), max_value=get_max_value()):
     """
     :param noise: return random matrix if True
-    :param n: dimension of control variable (P from the article)
+    :param dim: dimension of control variable (P from the article)
     :param size: amount of them (N from the article)
+    :param min_value: minimal possible value
+    :param max_value: maximum possible value
     :return: ndarray N*P
     """
     if noise:
-        return [get_control_vars(n) for _ in range(size)]
+        return [get_control_vars(dim, min_value, max_value) for _ in range(size)]
     else:
-        matrix = np.zeros((size, n))
+        matrix = np.zeros((size, dim))
 
         for i in range(size):
-            for j in range(n):
-                matrix[i, j] = (i + j) % size + 1
+            for j in range(dim):
+                matrix[i, j] = (i + j) % max_value + 1
 
         return matrix
 
@@ -93,6 +119,18 @@ def get_array_of_figures(control_vars, num=N, noise=True):
         sample = get_flat_array_of_3d_data(xy, yz, xz)
         samples.append(sample)
     return samples
+
+
+def main():
+    ax = init_viz()
+    initial_point = (0, 0, 0)
+    angels = (45, 60, 120)
+    scale = get_control_vars(get_p())
+    planes = create_figure(initial_point, scale, angles=angels)
+    plot_figure(ax, planes)
+    set_labels(ax)
+    set_title(*angels)
+    show()
 
 
 if __name__ == '__main__':
