@@ -13,9 +13,7 @@ Right shows Y's generated from x by applying Y = xB, where B was obtained by lea
 
 ![300_cyl_100_points_1_to_10.png](./graphs/200_cyl_100_points_1_to_10.png)
 
-This is an error plot - each point reflects relative error in it.
 
-![300_cyl_100_points_1_to_10_err.png](./graphs/200_cyl_100_points_1_to_10_err.png)
 
 ##### Predictive optimization
 
@@ -31,7 +29,6 @@ Number of neighbors = 4, C = 1e5 (C doesn't affect).
 Takes 1h to execute. Median of relative error is  0.4.
 
 ![200_cyl_200_points_1_to_10.png](./graphs/200_cyl_200_points_1_to_10.png)
-![200_cyl_200_points_1_to_10_err.png](./graphs/200_cyl_200_points_1_to_10_err.png)
 
 ##### Predictive optimization
 
@@ -45,7 +42,6 @@ Number of neighbors = 3, C = 1e5.
 Takes 1h 6m to execute. Median of relative error is  0.4.
 
 ![200_cyl_200_points_1_to_10_k_3.png](./graphs/200_cyl_200_points_1_to_10_k_3.png)
-![200_cyl_200_points_1_to_10_k_3_err.png](./graphs/200_cyl_200_points_1_to_10_k_3_err.png)
 
 ##### Predictive optimization
 
@@ -59,7 +55,6 @@ Number of neighbors = 3, C = 1e5.
 Takes 1h 2m to execute. Median of relative error is  0.4.
 
 ![200_cyl_200_points_1_to_10_k_3_determined.png](./graphs/200_cyl_200_points_1_to_10_k_3_determined.png)
-![200_cyl_200_points_1_to_10_k_3_determined_err.png](./graphs/200_cyl_200_points_1_to_10_k_3_determined_err.png)
 
 ##### Predictive optimization
 
@@ -73,7 +68,6 @@ Number of neighbors = 2, C = 1e7.
 Takes 40 s to execute. Median of relative error is  0.37.
 
 ![200_cyl_200_points_1_to_10_k_2_determined.png](./graphs/200_cyl_200_points_1_to_10_k_2_determined.png)
-![200_cyl_200_points_1_to_10_k_2_determined_err.png](./graphs/200_cyl_200_points_1_to_10_k_2_determined_err.png)
 
 ##### Predictive optimization
 
@@ -87,7 +81,6 @@ Number of neighbors = 2, C = 1e5.
 Takes 1h 1m to execute. Median of relative error is  0.32.
 
 ![200_cyl_200_points_1_to_10_k_2_c_1e5_determined.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_1e5_determined.png)
-![200_cyl_200_points_1_to_10_k_2_c_1e5_determined_err.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_1e5_determined_err.png)
 
 ##### Predictive optimization
 
@@ -101,7 +94,6 @@ Number of neighbors = 2, C = 1e4.
 Takes 25m to execute. Median of relative error is  0.36.
 
 ![200_cyl_200_points_1_to_10_k_2_c_1e4_determined.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_1e4_determined.png)
-![200_cyl_200_points_1_to_10_k_2_c_1e4_determined_err.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_1e4_determined_err.png)
 
 ##### Predictive optimization
 
@@ -116,7 +108,6 @@ Number of neighbors = 2, C = 1e3.
 Takes 54m to execute. Median of relative error is  0.18.
 
 ![200_cyl_200_points_1_to_10_k_2_c_1e3_determined.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_1e3_determined.png)
-![200_cyl_200_points_1_to_10_k_2_c_1e3_determined_err.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_1e3_determined_err.png)
 
 ##### Predictive optimization
 
@@ -130,7 +121,6 @@ Number of neighbors = 2, C = 500.
 Takes 8m to execute. Median of relative error is  0.07.
 
 ![200_cyl_200_points_1_to_10_k_2_c_500_determined.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_500_determined.png)
-![200_cyl_200_points_1_to_10_k_2_c_500_determined_err.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_500_determined_err.png)
 
 ##### Predictive optimization
 
@@ -144,7 +134,6 @@ Number of neighbors = 3, C = 500.
 Takes 32m to execute. Median of relative error is  0.15.
 
 ![200_cyl_200_points_1_to_10_k_3_c_500_determined.png](./graphs/200_cyl_200_points_1_to_10_k_3_c_500_determined.png)
-![200_cyl_200_points_1_to_10_k_3_c_500_determined_err.png](./graphs/200_cyl_200_points_1_to_10_k_3_c_500_determined_err.png)
 
 ##### Predictive optimization
 
@@ -158,7 +147,6 @@ Number of neighbors = 2, C = 300.
 Takes 40s to execute. Median of relative error is  0.07.
 
 ![200_cyl_200_points_1_to_10_k_2_c_300_determined.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_300_determined.png)
-![200_cyl_200_points_1_to_10_k_2_c_300_determined_err.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_300_determined_err.png)
 
 ##### Predictive optimization
 
@@ -172,7 +160,6 @@ Number of neighbors = 2, C = 400.
 Takes 1m 40s to execute. Median of relative error is  0.06.
 
 ![200_cyl_200_points_1_to_10_k_2_c_400_determined.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_400_determined.png)
-![200_cyl_200_points_1_to_10_k_2_c_400_determined_err.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_400_determined_err.png)
 
 ##### Predictive optimization
 
@@ -186,7 +173,6 @@ Number of neighbors = 2, C = 350.
 Takes 1m 40s to execute. Median of relative error is  0.056.
 
 ![200_cyl_200_points_1_to_10_k_2_c_350_determined.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_350_determined.png)
-![200_cyl_200_points_1_to_10_k_2_c_350_determined_err.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_350_determined_err.png)
 
 ##### Predictive optimization
 
@@ -202,7 +188,6 @@ Number of neighbors = 2, C = 380.
 Takes 1m 40s to execute. Median of relative error is  0.068.
 
 ![200_cyl_200_points_1_to_10_k_2_c_380_determined_no_noise.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_380_determined_no_noise.png)
-![200_cyl_200_points_1_to_10_k_2_c_380_determined_no_noise_err.png](./graphs/200_cyl_200_points_1_to_10_k_2_c_380_determined_no_noise_err.png)
 
 ##### Predictive optimization
 
@@ -216,7 +201,6 @@ Number of neighbors = 5, C = 400.
 
 Takes 13 h (!) to execute. Median of relative error is  0.39.
 
-![500_cyl_100_points_1_to_10_k_5_c_400_determined.png](./graphs/500_cyl_100_points_1_to_10_k_5_c_400_determined.png)
 ![500_cyl_100_points_1_to_10_k_5_c_400_determined.png](./graphs/500_cyl_100_points_1_to_10_k_5_c_400_determined.png)
 
 ##### Predictive optimization
@@ -232,7 +216,6 @@ Number of neighbors = 5, C = 400.
 Takes 3 h to execute. Median of relative error is  0.29.
 
 ![300_cyl_100_points_1_to_10_k_5_c_400_determined.png](./graphs/300_cyl_100_points_1_to_10_k_5_c_400_determined.png)
-![300_cyl_100_points_1_to_10_k_5_c_400_determined_err.png](./graphs/300_cyl_100_points_1_to_10_k_5_c_400_determined_err.png)
 
 ##### Predictive optimization
 
@@ -246,7 +229,6 @@ Number of neighbors = 5, C = 400.
 Takes 26m to execute. Median of relative error is  0.13.
 
 ![400_cyl_200_points_1_to_10_k_5.png](./graphs/400_cyl_200_points_1_to_10_k_5.png)
-![400_cyl_200_points_1_to_10_k_5_err.png](./graphs/400_cyl_200_points_1_to_10_k_5_err.png)
 
 ##### Predictive optimization
 
@@ -260,7 +242,6 @@ Number of neighbors = 5, C = 400.
 Takes 35m to execute. Median of relative error is  0.079.
 
 ![400_cyl_300_points_1_to_10_k_5.png](./graphs/400_cyl_300_points_1_to_10_k_5.png)
-![400_cyl_300_points_1_to_10_k_5_err.png](./graphs/400_cyl_300_points_1_to_10_k_5_err.png)
 
 ##### Predictive optimization
 
@@ -274,7 +255,6 @@ Number of neighbors = 5, C = 400.
 Takes 33m to execute. Median of relative error is  0.078.
 
 ![400_cyl_400_points_1_to_10_k_5.png](./graphs/400_cyl_400_points_1_to_10_k_5.png)
-![400_cyl_400_points_1_to_10_k_5_err.png](./graphs/400_cyl_400_points_1_to_10_k_5_err.png)
 
 ##### Predictive optimization
 
@@ -289,7 +269,6 @@ Number of neighbors = 5, C = 400.
 Takes 1h 39 to execute. Median of relative error is  0.13.
 
 ![600_cyl_600_points_1_to_10_k_5.png](./graphs/600_cyl_600_points_1_to_10_k_5.png)
-![600_cyl_600_points_1_to_10_k_5_err.png](./graphs/600_cyl_600_points_1_to_10_k_5_err.png)
 
 ##### Predictive optimization
 
@@ -304,7 +283,6 @@ Number of neighbors = 6, C = 400.
 Takes 3h 6m to execute. Median of relative error is  0.08.
 
 ![700_cyl_700_points_1_to_10_k_6.png](./graphs/700_cyl_700_points_1_to_10_k_6.png)
-![700_cyl_700_points_1_to_10_k_6_err.png](./graphs/700_cyl_700_points_1_to_10_k_6_err.png)
 
 ##### Predictive optimization
 

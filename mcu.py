@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy
+from matplotlib.collections import LineCollection
 from scipy.optimize import dual_annealing
 
 
@@ -109,6 +110,30 @@ def plot_two_embeddings(ld_embedding, reconstructed_y):
     ld_plot.set_xlim(rec_plot.get_xlim())
     ld_plot.set_ylim(rec_plot.get_ylim())
     ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=10, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
+
+    plt.show()
+
+
+def plot_graph(edges, ld_embedding, reconstructed_y):
+    fig = plt.figure(figsize=(14, 7))
+    edge_colors = plt.cm.viridis(np.linspace(0,  255, len(edges)))
+
+    rec_plot_graph = fig.add_subplot(1, 2, 2)
+    rec_plot_graph.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=10, c=reconstructed_y[:, 0], cmap=plt.cm.Spectral)
+
+    rec_segments = reconstructed_y[edges.T]
+    rec_edges = LineCollection(rec_segments, colors=edge_colors, alpha=0.3, linewidth=1)
+    rec_plot_graph.add_collection(rec_edges)
+
+    ld_plot_graph = fig.add_subplot(1, 2, 1)
+    # ld_plot_graph.set_xlim(rec_plot_graph.get_xlim())
+    # ld_plot_graph.set_ylim(rec_plot_graph.get_ylim())
+
+    ld_plot_graph.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=10, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
+
+    ld_segments = ld_embedding[edges.T]
+    ld_edges = LineCollection(ld_segments, colors=edge_colors, alpha=0.3, linewidth=1)
+    ld_plot_graph.add_collection(ld_edges)
 
     plt.show()
 
