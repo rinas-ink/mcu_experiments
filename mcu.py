@@ -1,3 +1,5 @@
+import random
+
 import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy
@@ -22,11 +24,14 @@ def scale(data):
 
 
 def construct_graph(ys, k):
+    assert (0 < k < len(ys))
     edges = np.empty((0, 2), dtype=int)
     for y in ys:
         distances = np.linalg.norm(ys - y, axis=1)
-        neighbours = np.argsort(distances)[:k]
-        all_pairs = np.stack(np.meshgrid(neighbours, neighbours), axis=1).reshape(-1, 2)
+        neighbours = np.argsort(distances)[:k + 1]
+        i, j = np.meshgrid(np.arange(len(neighbours)), np.arange(len(neighbours)))
+        all_pairs = np.column_stack((neighbours[i.flatten()], neighbours[j.flatten()]))
+        # all_pairs = np.stack(np.meshgrid(neighbours, neighbours), axis=1).reshape(-1, 2)
         edges = np.vstack((edges, all_pairs))
     return np.unique(edges, axis=0)
 
@@ -74,13 +79,13 @@ def regress(y_, x):
 #   return np.linalg.inv(x.T.dot(x)).dot(x.T).dot(y_)
 
 
-def prepare_data(control_vars, response_matrix, k):
+def prepare_data(control_vars, figures, k):
     control_vars, x_means, x_stds = standardize(control_vars)
-    response_matrix, y_means = center(response_matrix)
-    response_matrix, y_scaler = scale(response_matrix)
+    figures, y_means = center(figures)
+    figures, y_scaler = scale(figures)
 
-    edges = construct_graph(response_matrix, k)
-    return control_vars, response_matrix, edges, y_means, y_scaler, x_means, x_stds
+    edges = construct_graph(figures, k)
+    return control_vars, figures, edges, y_means, y_scaler, x_means, x_stds
 
 
 def reduce_dimensions(q):
@@ -101,38 +106,42 @@ def plot_rre_heatmap(rre, reconstructed_y):
     plt.show()
 
 
-def plot_two_embeddings(ld_embedding, reconstructed_y):
+def plot_embeddings_vs_parameters(ld_embedding, reconstructed_y):
     fig = plt.figure(figsize=(14, 7))
+
     rec_plot = fig.add_subplot(1, 2, 2)
     rec_plot.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=10, c=reconstructed_y[:, 0], cmap=plt.cm.Spectral)
+    rec_plot.set_title('Reconstructed Embedding')
 
     ld_plot = fig.add_subplot(1, 2, 1)
+    ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=10, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
+    ld_plot.set_title('Params')
     ld_plot.set_xlim(rec_plot.get_xlim())
     ld_plot.set_ylim(rec_plot.get_ylim())
-    ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=10, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
 
     plt.show()
 
 
 def plot_graph(edges, ld_embedding, reconstructed_y):
-    fig = plt.figure(figsize=(14, 7))
-    edge_colors = plt.cm.viridis(np.linspace(0,  255, len(edges)))
+    fig, axes = plt.subplots(1, 2, figsize=(14, 7))
 
-    rec_plot_graph = fig.add_subplot(1, 2, 2)
-    rec_plot_graph.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=10, c=reconstructed_y[:, 0], cmap=plt.cm.Spectral)
+    edge_colors = ['red', 'green', 'blue']
+    edge_colors = [edge_colors[random.randint(0, 2)] for _ in range(len(edges))]
 
-    rec_segments = reconstructed_y[edges.T]
-    rec_edges = LineCollection(rec_segments, colors=edge_colors, alpha=0.3, linewidth=1)
+    rec_plot_graph = axes[1]
+    rec_plot_graph.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=20, c=reconstructed_y[:, 0],
+                           cmap=plt.cm.Spectral)
+    rec_segments = np.hstack((reconstructed_y[edges[:, 0]], reconstructed_y[edges[:, 1]]))
+    rec_segments = rec_segments.reshape((-1, 2, 2))
+    rec_edges = LineCollection(rec_segments, colors=edge_colors, alpha=0.5)
     rec_plot_graph.add_collection(rec_edges)
 
-    ld_plot_graph = fig.add_subplot(1, 2, 1)
-    # ld_plot_graph.set_xlim(rec_plot_graph.get_xlim())
-    # ld_plot_graph.set_ylim(rec_plot_graph.get_ylim())
+    ld_plot_graph = axes[0]
+    ld_plot_graph.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=20, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
 
-    ld_plot_graph.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=10, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
-
-    ld_segments = ld_embedding[edges.T]
-    ld_edges = LineCollection(ld_segments, colors=edge_colors, alpha=0.3, linewidth=1)
+    ld_segments = np.hstack((ld_embedding[edges[:, 0]], ld_embedding[edges[:, 1]]))
+    ld_segments = ld_segments.reshape((-1, 2, 2))
+    ld_edges = LineCollection(ld_segments, colors=edge_colors, alpha=0.5)
     ld_plot_graph.add_collection(ld_edges)
 
     plt.show()
