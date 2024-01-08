@@ -1,10 +1,10 @@
 import random
-
 import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy
 from matplotlib.collections import LineCollection
 from scipy.optimize import dual_annealing
+from skimage.filters import threshold_otsu
 
 
 def standardize(data):
@@ -63,11 +63,18 @@ def get_eigen_decomposition(q):
     return sorted_eigenvectors, np.diag(sorted_eigenvalues)
 
 
-def choose_principal_branches(eigenvectors, sigma, m_=2):  # FIXME: add Otsu's threshold
-    # m_ = 1
-    # while np.sum(sigma[:, :m_]) < 0.9 * np.sum(sigma):
-    #     m_ += 1
+def get_optimal_dimensionality(sigma):
+    eigenvalues = np.diagonal(sigma)
+    eigenvalues = eigenvalues[eigenvalues > 0]
+    log_of_eigenvalues = np.log(eigenvalues)
+    threshold = threshold_otsu(log_of_eigenvalues)
+    m_ = 0
+    while m_ < len(log_of_eigenvalues) and log_of_eigenvalues[m_] > threshold:
+        m_ += 1
+    return m_
 
+
+def reduce_dimension(eigenvectors, sigma, m_):
     return np.dot(eigenvectors[:, :m_], np.sqrt(sigma[:m_, :m_]))
 
 
@@ -88,9 +95,9 @@ def prepare_data(control_vars, figures, k):
     return control_vars, figures, edges, y_means, y_scaler, x_means, x_stds
 
 
-def reduce_dimensions(q):
+def reduce_dimensions(q, m_):
     u, s = get_eigen_decomposition(q)
-    y_ = choose_principal_branches(u, s)
+    y_ = reduce_dimension(u, s, m_)
     return y_
 
 
