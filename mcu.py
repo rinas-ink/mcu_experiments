@@ -147,7 +147,7 @@ def plot_graph(edges, ld_embedding, reconstructed_y):
     plt.show()
 
 
-def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler, k):
+def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler, k, seed=-1):
     y_nom = (y_nom - y_means) / y_scaler
     distances = np.linalg.norm(centered_y - y_nom, axis=1)
     neighbours = np.argsort(distances)[:k]
@@ -164,5 +164,8 @@ def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, 
     lw = [-1.3] * np.shape(regression_matrix)[1]
     up = [1.3] * np.shape(regression_matrix)[1]
 
-    x_opt = dual_annealing(x_error, bounds=list(zip(lw, up)))
+    if seed == -1:
+        x_opt = dual_annealing(x_error, bounds=list(zip(lw, up)))
+    else:
+        x_opt = dual_annealing(x_error, bounds=list(zip(lw, up)), seed=seed)
     return x_opt.x, x_error(x_opt.x)
