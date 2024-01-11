@@ -36,7 +36,7 @@ def construct_graph(ys, k):
     for y in ys:
         distances = np.linalg.norm(ys - y, axis=1)
         neighbours = np.argsort(distances)[:k+1]
-        all_pairs = np.array(list(combinations(neighbours, 2)))
+        all_pairs = np.array(list(combinations(sorted(neighbours), 2)))
         edges = np.vstack((edges, all_pairs))
     return np.unique(edges, axis=0)
 
