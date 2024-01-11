@@ -37,6 +37,7 @@ class GraphStructureTestCase(unittest.TestCase):
         k = 2
         edges = construct_graph(ys, k)
         # plot_two_embeddings_with_edges(ys, ys, edges)
+        print(sorted(edges.tolist()))
 
         correct_edges = [[0, 2], [0, 3], [0, 6], [0, 9], [1, 5], [1, 6], [1, 8], [1, 9], [2, 6], [3, 4], [3, 7], [3, 9], [4, 7], [5, 7], [5, 8], [6, 9], [7, 8], [7, 9], [8, 9]]
         self.assertListEqual(sorted(edges.tolist()), sorted(correct_edges))
