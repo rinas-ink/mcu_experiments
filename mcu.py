@@ -160,8 +160,8 @@ def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, 
     neighbours = np.argsort(distances)[:k]
 
     def y_error(v):
-        err_diff = (np.linalg.norm(v - ld_embedding[neighbours]) -
-                    np.linalg.norm(y_nom - centered_y[neighbours]))
+        err_diff = (np.linalg.norm(v - ld_embedding[neighbours], axis=1) -
+                    np.linalg.norm(y_nom - centered_y[neighbours], axis=1))
         sum_err = np.sum(err_diff ** 2)
         return sum_err
 

@@ -48,7 +48,7 @@ def generate_cylinder_points(height, radius, sorted, min_num_points=100, determi
     points = np.column_stack((x, y, heights))
 
     if sorted:
-        sorted_indices = np.lexsort((heights, angles))
+        sorted_indices = np.lexsort((points[:, 0], points[:, 1], points[:, 2]))
         return points[sorted_indices]
     else:
         np.random.shuffle(points)
