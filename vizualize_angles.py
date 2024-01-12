@@ -17,7 +17,6 @@ def plot_figure(ax, planes):
     plot_plane(ax, *planes[2], color='r')
 
 
-
 def set_axes_equal(ax):
     x_limits = ax.get_xlim3d()
     y_limits = ax.get_ylim3d()
