@@ -101,8 +101,7 @@ def get_array_of_control_vars(noise=True, dim=get_p(), size=N,
 
         for i in range(size):
             for j in range(dim):
-                matrix[i, j] = (i + j) % max_value + 1
-
+                matrix[i, j] = (i+j) % max_value + 1
         return matrix
 
 
