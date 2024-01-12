@@ -151,7 +151,20 @@ def plot_two_embeddings(ld_embedding, reconstructed_y):
     plt.show()
 
 
-def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler, k=get_k(), p=get_p()):
+def compute_3d_rre_median(ld_embedding, reconstructed_y):
+    slices = [slice(None, 2), slice(1, None), [0, -1]]
+    rre_arr = []
+
+    for i, sl in enumerate(slices):
+        ld_emb_slice = ld_embedding[:, sl]
+        rec_y_slice = reconstructed_y[:, sl]
+        rre_arr.append(compute_rre_median(ld_emb_slice, rec_y_slice))
+
+    return np.array(rre_arr)
+
+
+def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler, k=get_k(),
+                            p=get_p()):
     y_nom = (y_nom - y_means) / y_scaler
     distances = np.linalg.norm(centered_y - y_nom, axis=1)
     neighbours = np.argsort(distances)[:k]
