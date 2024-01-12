@@ -27,4 +27,4 @@ When it can be useful:
  
  -- too many corners, robots needs to quickly understand where to move. The robot divides the picture into parts of the possible direction of movement, analyses and takes the first suitable one
  
- * try to make mcu based on the picture or try the Weinberger and Saul algorithm that works with the picture.
+ * try to use mcu based on the picture or try the Weinberger and Saul algorithm that works with the picture.
