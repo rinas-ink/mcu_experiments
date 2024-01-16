@@ -1,5 +1,5 @@
 import math
-import random
+import dataset_generator
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,19 +9,6 @@ N = 200
 
 def get_p():
     return 2
-
-
-def get_control_vars(deterministic=True, size=N, lw=None, up=None):
-    if lw is None:
-        lw = [0, 0]
-    if up is None:
-        up = [10, 5]
-    if deterministic:
-        height = np.linspace(lw[0], up[0], int(math.sqrt(size)), endpoint=False)
-        radius = np.linspace(lw[1], up[1], int(math.sqrt(size)), endpoint=False)
-        x_grid, y_grid = np.meshgrid(height, radius)
-        return np.vstack([x_grid.ravel(), y_grid.ravel()]).T
-    return np.array([[random.random() * (up[i] - lw[i]) + lw[i] for i in range(get_p())] for _ in range(size)])
 
 
 def generate_cylinder_points(height, radius, sorted, min_num_points=100, deterministic_scatter=False):
@@ -74,12 +61,6 @@ def generate_rectangle(width, height, sorted, num_points=100, deterministic_scat
     return np.random.shuffle(np.array(points))
 
 
-def add_noise_to_points(points, noise_level=0.1):
-    noise = np.random.normal(0, noise_level, points.shape)
-    noisy_points = points + noise
-    return noisy_points
-
-
 def plot_points(points):
     fig = plt.figure()
     ax = fig.add_subplot(121, projection='3d')
@@ -96,7 +77,7 @@ def generate_array_of_cylinders(control_vars, noise_level=0.1, num_points=100, s
     cylinders = []
     for height, radius in control_vars:
         cylinder = generate_cylinder_points(height, radius, sorted, num_points, deterministic_scatter)
-        cylinder = add_noise_to_points(cylinder, noise_level)
+        cylinder = dataset_generator.add_noise_to_points(cylinder, noise_level)
         cylinder = get_flat_array_of_cylinder(cylinder)
         cylinders.append(cylinder)
     return np.array(cylinders)
@@ -104,7 +85,7 @@ def generate_array_of_cylinders(control_vars, noise_level=0.1, num_points=100, s
 
 def main():
     cylinder = generate_cylinder_points(20, 5, False, 100)
-    cylinder = add_noise_to_points(cylinder)
+    cylinder = dataset_generator.add_noise_to_points(cylinder)
     plot_points(cylinder)
 
 
