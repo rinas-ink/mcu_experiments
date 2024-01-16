@@ -36,7 +36,7 @@ def construct_graph(ys, k):
     for y in ys:
         distances = np.linalg.norm(ys - y, axis=1)
         neighbours = np.argsort(distances)[:k+1]
-        all_pairs = np.array(list(combinations(neighbours, 2)))
+        all_pairs = np.array(list(combinations(sorted(neighbours), 2)))
         edges = np.vstack((edges, all_pairs))
     return np.unique(edges, axis=0)
 
@@ -44,17 +44,18 @@ def construct_graph(ys, k):
 def solve_semidefinite_programming(xs, ys, edges):
     n = xs.shape[0]
     p = np.dot(ys, ys.T)
-    q = cvxpy.Variable((n, n), symmetric=True)
+    q = cvxpy.Variable((n, n), PSD=True)
     c = get_c()
-    constraints = [q >> 0]
-    constraints += [cvxpy.trace(np.ones((n, n)) @ q) == 0]
+    constraints = [cvxpy.trace(np.ones((n, n)) @ q) == 0]
     constraints += [cvxpy.trace(q) <= (n - 1) * c]
     constraints += [
         q[i][i] + q[j][j] - 2 * q[i][j] == p[i][i] + p[j][j] - 2 * p[i][j] for i, j in edges
     ]
 
     prob = cvxpy.Problem(cvxpy.Maximize(cvxpy.trace(xs @ xs.T @ q)), constraints)
-    prob.solve()
+    prob.solve(solver=cvxpy.SCS, verbose=True, \
+                max_iters=100000, scale=0.1, \
+                acceleration_lookback=10, acceleration_interval=10)
     return q.value
 
 

@@ -22,9 +22,8 @@ def get_meshgrid():
     return np.meshgrid(x, y)
 
 
-def add_noise(x, y, noise_strength=0.1):
+def add_noise(x, noise_strength=0.1):
     x += np.random.normal(0, noise_strength, x.shape)
-    y += np.random.normal(0, noise_strength, y.shape)
 
 
 def get_control_vars(n, size=N):
@@ -55,7 +54,6 @@ def generate_array_of_swiss_rolls(control_vars, num=N):
     :return: List N*M, where M is from the article = len (all points concatenated)
     """
     X, Y = get_meshgrid()
-    add_noise(X, Y)
     X, Y = X.ravel(), Y.ravel()
     samples = []
     for i in range(num):
@@ -66,7 +64,9 @@ def generate_array_of_swiss_rolls(control_vars, num=N):
         sample = get_flat_array_of_swiss_roll(x_swiss_roll, y_swiss_roll, z_swiss_roll)
         samples.append(sample)
 
-    return np.array(samples)
+    samples = np.array(samples)
+    add_noise(samples)
+    return samples
 
 
 if __name__ == '__main__':
