@@ -34,8 +34,8 @@ def get_c():
 def construct_graph(ys, k):
     edges = np.empty((0, 2), dtype=int)
     for y in ys:
-        distances = np.linalg.norm(ys - y, axis=1)
-        neighbours = np.argsort(distances)[:k+1]
+        distances = np.round(np.linalg.norm(ys - y, axis=1), 12)
+        neighbours = np.argsort(distances, kind='stable')[:k+1]
         all_pairs = np.array(list(combinations(sorted(neighbours), 2)))
         edges = np.vstack((edges, all_pairs))
     return np.unique(edges, axis=0)

@@ -1,4 +1,3 @@
-import random
 import numpy as np
 
 from vizualize_angles import plot_figure, init_viz, show, set_limits, change_view_point
@@ -58,7 +57,7 @@ def main():
 
 
 def get_control_vars(n=get_p()):
-    return np.array([random.randint(get_min_value(), get_max_value()) for _ in range(n)])
+    return np.array([np.random.randint(get_min_value(), get_max_value()) for _ in range(n)])
 
 
 def get_array_of_control_vars(noise=True, n=get_p(), size=N):
