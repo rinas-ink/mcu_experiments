@@ -1,5 +1,3 @@
-from swiss_roll_dataset_generator import get_p
-import random
 import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy
@@ -26,11 +24,11 @@ def scale(data):
 
 
 def get_k():
-    return 5  # FIXME
+    return 5
 
 
 def get_c():
-    return 1e5  # FIXME
+    return 1e5
 
 
 def construct_graph(ys, k):
@@ -47,17 +45,18 @@ def construct_graph(ys, k):
 def solve_semidefinite_programming(xs, ys, edges, c):
     n = xs.shape[0]
     p = np.dot(ys, ys.T)
-    q = cvxpy.Variable((n, n), symmetric=True)
-
-    constraints = [q >> 0]
-    constraints += [cvxpy.trace(np.ones((n, n)) @ q) == 0]
+    q = cvxpy.Variable((n, n), PSD=True)
+    c = get_c()
+    constraints = [cvxpy.trace(np.ones((n, n)) @ q) == 0]
     constraints += [cvxpy.trace(q) <= (n - 1) * c]
     constraints += [
         q[i][i] + q[j][j] - 2 * q[i][j] == p[i][i] + p[j][j] - 2 * p[i][j] for i, j in edges
     ]
 
     prob = cvxpy.Problem(cvxpy.Maximize(cvxpy.trace(xs @ xs.T @ q)), constraints)
-    prob.solve()
+    prob.solve(solver=cvxpy.SCS, verbose=True, \
+                max_iters=100000, scale=0.1, \
+                acceleration_lookback=10, acceleration_interval=10)
     return q.value
 
 
@@ -113,10 +112,12 @@ def compute_rre_median(ld_embedding, reconstructed_y):
 def compute_rre(ld_embedding, reconstructed_y):
     return np.linalg.norm(ld_embedding - reconstructed_y, axis=1) / np.linalg.norm(ld_embedding, axis=1)
 
+
 def diff_of_edges_lengths(ld_embedding, reconstructed_y, edges):
     edge_lengths_ld = np.linalg.norm(ld_embedding[edges[:, 0]] - ld_embedding[edges[:, 1]], axis=1)
     edge_lengths_rec = np.linalg.norm(reconstructed_y[edges[:, 0]] - reconstructed_y[edges[:, 1]], axis=1)
     return edge_lengths_ld - edge_lengths_rec
+
 
 def plot_rre_heatmap(rre, reconstructed_y):
     fig = plt.figure(figsize=(6, 6))
@@ -161,6 +162,7 @@ def plot_embeddings_vs_parameters(ld_embedding, reconstructed_y):
 
     plt.show()
 
+
 def plot_two_embeddings_with_edges(ld_embedding, reconstructed_y, edges):
     fig = plt.figure(figsize=(14, 7))
     rec_plot = fig.add_subplot(1, 2, 2)
@@ -175,11 +177,12 @@ def plot_two_embeddings_with_edges(ld_embedding, reconstructed_y, edges):
         ld_plot.plot([ld_embedding[i, 0], ld_embedding[j, 0]], [ld_embedding[i, 1], ld_embedding[j, 1]], color='black', linestyle='-', linewidth=1)
     plt.show()
 
+
 def plot_graph(edges, ld_embedding, reconstructed_y):
     fig, axes = plt.subplots(1, 2, figsize=(14, 7))
 
     edge_colors = ['red', 'green', 'blue']
-    edge_colors = [edge_colors[random.randint(0, 2)] for _ in range(len(edges))]
+    edge_colors = [edge_colors[np.random.randint(0, 2)] for _ in range(len(edges))]
 
     rec_plot_graph = axes[1]
     rec_plot_graph.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=20, c=reconstructed_y[:, 0],
