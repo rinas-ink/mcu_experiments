@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
-from swiss_roll_dataset_generator import generate_array_of_swiss_rolls, get_control_vars, get_p
-from mcu import construct_graph, plot_two_embeddings_with_edges
+from dataset_generator import get_control_vars
+from swiss_roll_dataset_generator import generate_array_of_swiss_rolls, get_p
+from mcu import construct_graph, k_nearest_neighbours
 
 class GraphStructureTestCase(unittest.TestCase):
     def test_graph_structure(self):
@@ -9,7 +10,9 @@ class GraphStructureTestCase(unittest.TestCase):
         for test_n in range(10):
             k = np.random.randint(2, 10)
             n = np.random.randint(k + 1, 100)
-            ys = generate_array_of_swiss_rolls(get_control_vars(get_p(), n), n)
+            control_vars = get_control_vars(deterministic=False, dimensionality=get_p(),
+                                                               size=n, lw=[1, 1], up=[10, 10])
+            ys = generate_array_of_swiss_rolls(control_vars, noise_level=0.1, min_num_points=1600)
             edges = construct_graph(ys, k)
 
             degree = [0] * n
@@ -23,8 +26,7 @@ class GraphStructureTestCase(unittest.TestCase):
 
             edges = set(map(tuple, edges))
             for y in ys:
-                distances = np.linalg.norm(ys - y, axis=1)
-                neighbours = sorted(np.argsort(distances)[:k+1])
+                neighbours = sorted(k_nearest_neighbours(ys, y, k))
                 for i in range(k + 1):
                     for j in range(i + 1, k + 1):
                         self.assertIn((neighbours[i], neighbours[j]), edges, "Edge ({}, {}) not found in test {}".format(neighbours[i], neighbours[j], test_n))

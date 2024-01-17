@@ -31,12 +31,18 @@ def get_c():
     return 1e5
 
 
+# Returns indices of k nearest neighbours of y in ys and y itself
+def k_nearest_neighbours(ys, y, k):
+    distances = np.round(np.linalg.norm(ys - y, axis=1), 12)
+    neighbours = np.argsort(distances, kind='stable')[:k+1]
+    return neighbours
+
+
 def construct_graph(ys, k):
     assert (0 < k < len(ys))
     edges = np.empty((0, 2), dtype=int)
     for y in ys:
-        distances = np.round(np.linalg.norm(ys - y, axis=1), 12)
-        neighbours = np.argsort(distances, kind='stable')[:k+1]
+        neighbours = k_nearest_neighbours(ys, y, k)
         all_pairs = np.array(list(combinations(sorted(neighbours), 2)))
         edges = np.vstack((edges, all_pairs))
     return np.unique(edges, axis=0)
