@@ -1,6 +1,9 @@
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+
+import dataset_generator
 
 N = 200
 
@@ -16,23 +19,17 @@ def swiss_roll_function(x, y, c1, c2):
     return x_val, y, z_val
 
 
-def get_meshgrid():
-    x = np.linspace(4, 16, 40, endpoint=False)
-    y = np.linspace(4, 16, 40, endpoint=False)
+def get_meshgrid(n):
+    """
+    :return: n*n meshgrid
+    """
+    x = np.linspace(4, 16, n, endpoint=False)
+    y = np.linspace(4, 16, n, endpoint=False)
     return np.meshgrid(x, y)
 
 
 def add_noise(x, noise_strength=0.1):
     x += np.random.normal(0, noise_strength, x.shape)
-
-
-def get_control_vars(n, size=N):
-    """
-    :param n: dimension of control variable (P from the article)
-    :param size: amount of them
-    :return: List N*P
-    """
-    return np.array([np.random.uniform(1, 10, n) for _ in range(size)])
 
 
 def visualize_swiss_roll(x, y, z):
@@ -49,14 +46,15 @@ def get_flat_array_of_swiss_roll(x_swiss_roll, y_swiss_roll, z_swiss_roll):
     return np.column_stack((x_swiss_roll, y_swiss_roll, z_swiss_roll)).reshape(-1)
 
 
-def generate_array_of_swiss_rolls(control_vars, num=N):
+def generate_array_of_swiss_rolls(control_vars, noise_level=0.1, min_num_points=1600):
     """
     :return: List N*M, where M is from the article = len (all points concatenated)
     """
-    X, Y = get_meshgrid()
+    sqrt_num_points = int(math.ceil(math.sqrt(min_num_points)))
+    X, Y = get_meshgrid(sqrt_num_points)
     X, Y = X.ravel(), Y.ravel()
     samples = []
-    for i in range(num):
+    for i in range(len(control_vars)):
         c_size, c_degree = control_vars[i]
         x_swiss_roll, y_swiss_roll, z_swiss_roll = swiss_roll_function(X, Y, c_size, c_degree)
         # visualize_swiss_roll(x_swiss_roll, y_swiss_roll, z_swiss_roll)
@@ -64,10 +62,6 @@ def generate_array_of_swiss_rolls(control_vars, num=N):
         sample = get_flat_array_of_swiss_roll(x_swiss_roll, y_swiss_roll, z_swiss_roll)
         samples.append(sample)
 
-    samples = np.array(samples)
-    add_noise(samples)
+    samples = dataset_generator.add_noise_to_points(np.array(samples), noise_level=noise_level)
+
     return samples
-
-
-if __name__ == '__main__':
-    result = generate_array_of_swiss_rolls(control_vars=get_control_vars(get_p()))

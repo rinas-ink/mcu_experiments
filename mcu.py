@@ -1,7 +1,7 @@
-from swiss_roll_dataset_generator import get_p
 import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy
+from matplotlib.collections import LineCollection
 from itertools import combinations
 from scipy.optimize import dual_annealing
 from skimage.filters import threshold_otsu
@@ -24,24 +24,25 @@ def scale(data):
 
 
 def get_k():
-    return 5  # FIXME
+    return 5
 
 
 def get_c():
-    return 1e5  # FIXME
+    return 1e5
 
 
 def construct_graph(ys, k):
+    assert (0 < k < len(ys))
     edges = np.empty((0, 2), dtype=int)
     for y in ys:
-        distances = np.linalg.norm(ys - y, axis=1)
-        neighbours = np.argsort(distances)[:k+1]
+        distances = np.round(np.linalg.norm(ys - y, axis=1), 12)
+        neighbours = np.argsort(distances, kind='stable')[:k+1]
         all_pairs = np.array(list(combinations(sorted(neighbours), 2)))
         edges = np.vstack((edges, all_pairs))
     return np.unique(edges, axis=0)
 
 
-def solve_semidefinite_programming(xs, ys, edges):
+def solve_semidefinite_programming(xs, ys, edges, c):
     n = xs.shape[0]
     p = np.dot(ys, ys.T)
     q = cvxpy.Variable((n, n), PSD=True)
@@ -89,13 +90,13 @@ def regress(y_, x):
     return B
 
 
-def prepare_data(control_vars, response_matrix):
+def prepare_data(control_vars, figures, k):
     control_vars, x_means, x_stds = standardize(control_vars)
-    response_matrix, y_means = center(response_matrix)
-    response_matrix, y_scaler = scale(response_matrix)
-    k = get_k()
-    edges = construct_graph(response_matrix, k)
-    return control_vars, response_matrix, edges, y_means, y_scaler, x_means, x_stds
+    figures, y_means = center(figures)
+    figures, y_scaler = scale(figures)
+
+    edges = construct_graph(figures, k)
+    return control_vars, figures, edges, y_means, y_scaler, x_means, x_stds
 
 
 def reduce_dimensions(q, m_):
@@ -111,15 +112,17 @@ def compute_rre_median(ld_embedding, reconstructed_y):
 def compute_rre(ld_embedding, reconstructed_y):
     return np.linalg.norm(ld_embedding - reconstructed_y, axis=1) / np.linalg.norm(ld_embedding, axis=1)
 
+
 def diff_of_edges_lengths(ld_embedding, reconstructed_y, edges):
     edge_lengths_ld = np.linalg.norm(ld_embedding[edges[:, 0]] - ld_embedding[edges[:, 1]], axis=1)
     edge_lengths_rec = np.linalg.norm(reconstructed_y[edges[:, 0]] - reconstructed_y[edges[:, 1]], axis=1)
     return edge_lengths_ld - edge_lengths_rec
 
+
 def plot_rre_heatmap(rre, reconstructed_y):
     fig = plt.figure(figsize=(6, 6))
     scatter = plt.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=20, c=rre, cmap='viridis', edgecolors='w',
-                          vmin=0, vmax=0.1)
+                          vmin=0)
     cbar = plt.colorbar(scatter)
     plt.show()
 
@@ -144,17 +147,21 @@ def plot_two_embeddings_3d(ld_embedding, reconstructed_y):
     plt.show()
 
 
-def plot_two_embeddings(ld_embedding, reconstructed_y):
+def plot_embeddings_vs_parameters(ld_embedding, reconstructed_y):
     fig = plt.figure(figsize=(14, 7))
+
     rec_plot = fig.add_subplot(1, 2, 2)
     rec_plot.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=10, c=reconstructed_y[:, 0], cmap=plt.cm.Spectral)
+    rec_plot.set_title('Reconstructed Embedding')
 
     ld_plot = fig.add_subplot(1, 2, 1)
+    ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=10, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
+    ld_plot.set_title('Params')
     ld_plot.set_xlim(rec_plot.get_xlim())
     ld_plot.set_ylim(rec_plot.get_ylim())
-    ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=10, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
 
     plt.show()
+
 
 def plot_two_embeddings_with_edges(ld_embedding, reconstructed_y, edges):
     fig = plt.figure(figsize=(14, 7))
@@ -165,31 +172,58 @@ def plot_two_embeddings_with_edges(ld_embedding, reconstructed_y, edges):
     ld_plot.set_xlim(rec_plot.get_xlim())
     ld_plot.set_ylim(rec_plot.get_ylim())
     ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=25, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
-
     for i, j in edges:
         rec_plot.plot([reconstructed_y[i, 0], reconstructed_y[j, 0]], [reconstructed_y[i, 1], reconstructed_y[j, 1]], color='black', linestyle='-', linewidth=1)
         ld_plot.plot([ld_embedding[i, 0], ld_embedding[j, 0]], [ld_embedding[i, 1], ld_embedding[j, 1]], color='black', linestyle='-', linewidth=1)
     plt.show()
 
 
-def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler, k=get_k()):
+def plot_graph(edges, ld_embedding, reconstructed_y):
+    fig, axes = plt.subplots(1, 2, figsize=(14, 7))
+
+    edge_colors = ['red', 'green', 'blue']
+    edge_colors = [edge_colors[np.random.randint(0, 2)] for _ in range(len(edges))]
+
+    rec_plot_graph = axes[1]
+    rec_plot_graph.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=20, c=reconstructed_y[:, 0],
+                           cmap=plt.cm.Spectral)
+    rec_segments = np.hstack((reconstructed_y[edges[:, 0]], reconstructed_y[edges[:, 1]]))
+    rec_segments = rec_segments.reshape((-1, 2, 2))
+    rec_edges = LineCollection(rec_segments, colors=edge_colors, alpha=0.5)
+    rec_plot_graph.add_collection(rec_edges)
+
+    ld_plot_graph = axes[0]
+    ld_plot_graph.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=20, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
+
+    ld_segments = np.hstack((ld_embedding[edges[:, 0]], ld_embedding[edges[:, 1]]))
+    ld_segments = ld_segments.reshape((-1, 2, 2))
+    ld_edges = LineCollection(ld_segments, colors=edge_colors, alpha=0.5)
+    ld_plot_graph.add_collection(ld_edges)
+
+    plt.show()
+
+
+def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler, k, seed=-1):
     y_nom = (y_nom - y_means) / y_scaler
     distances = np.linalg.norm(centered_y - y_nom, axis=1)
     neighbours = np.argsort(distances)[:k]
 
     def y_error(v):
-        err_diff = (np.linalg.norm(v - ld_embedding[neighbours]) -
-                    np.linalg.norm(y_nom - centered_y[neighbours]))
+        err_diff = (np.linalg.norm(v - ld_embedding[neighbours], axis=1) -
+                    np.linalg.norm(y_nom - centered_y[neighbours], axis=1))
         sum_err = np.sum(err_diff ** 2)
         return sum_err
 
     def x_error(x):
         return y_error(np.dot(x, regression_matrix))
 
-    lw = [-1.3] * get_p()
-    up = [1.3] * get_p()
+    lw = [-1.3] * np.shape(regression_matrix)[1]
+    up = [1.3] * np.shape(regression_matrix)[1]
 
-    x_opt = dual_annealing(x_error, bounds=list(zip(lw, up)))
+    if seed == -1:
+        x_opt = dual_annealing(x_error, bounds=list(zip(lw, up)))
+    else:
+        x_opt = dual_annealing(x_error, bounds=list(zip(lw, up)), seed=seed)
     return x_opt.x, x_error(x_opt.x)
 
 # def plot_predictive_optimization_error(x_opt, x_real):
