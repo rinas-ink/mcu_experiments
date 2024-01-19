@@ -11,10 +11,17 @@ def get_p():
     return 2
 
 
-def generate_cylinder_points(height, radius, sorted, min_num_points=100, deterministic_scatter=False):
+def generate_cylinder_points(height, radius, rotation_angle_x=0, rotation_angle_y=0, sorted=True,
+                             min_num_points=100, deterministic_scatter=True):
     """
+    :param height: height of cylinder
+    :param radius:
+    :param rotation_angle_x: angle to rotate around x-axis in radians
+    :param rotation_angle_y: angle to rotate around y-axis in radians
+    :param sorted: if points on cylinder surfece should e sorted according to their x, y, z coordinates
     :param min_num_points: if deterministic_scatter=True then there generated a number of points,
      equal to the first square >= min_num_points
+     :param deterministic_scatter: if points on cylinder are placed deterministically
     """
     angles = None
     heights = None
@@ -34,8 +41,22 @@ def generate_cylinder_points(height, radius, sorted, min_num_points=100, determi
 
     points = np.column_stack((x, y, heights))
 
+    rotation_matrix_x = np.array([
+        [1, 0, 0],
+        [0, np.cos(rotation_angle_x), -np.sin(rotation_angle_x)],
+        [0, np.sin(rotation_angle_x), np.cos(rotation_angle_x)]
+    ])
+    rotation_matrix_y = np.array([
+        [np.cos(rotation_angle_y), 0, np.sin(rotation_angle_y)],
+        [0, 1, 0],
+        [-np.sin(rotation_angle_y), 0, np.cos(rotation_angle_y)]
+    ])
+
+    points = np.dot(points, rotation_matrix_x.T)
+    points = np.dot(points, rotation_matrix_y.T)
+
     if sorted:
-        sorted_indices = np.lexsort((points[:, 0], points[:, 1], points[:, 2]))
+        sorted_indices = np.lexsort((heights, angles))
         return points[sorted_indices]
     else:
         np.random.shuffle(points)
@@ -72,11 +93,11 @@ def get_flat_array_of_cylinder(points):
     return np.column_stack(points).reshape(-1)
 
 
-def generate_array_of_cylinders(control_vars, noise_level=0.1, num_points=100, sorted=False,
-                                deterministic_scatter=False):
+def generate_array_of_cylinders(control_vars, noise_level=0.1, num_points=100, sorted=True,
+                                deterministic_scatter=True):
     cylinders = []
-    for height, radius in control_vars:
-        cylinder = generate_cylinder_points(height, radius, sorted, num_points, deterministic_scatter)
+    for height, radius, rotation_angle_x in control_vars:
+        cylinder = generate_cylinder_points(height, radius, rotation_angle_x, sorted, num_points, deterministic_scatter)
         cylinder = dataset_generator.add_noise_to_points(cylinder, noise_level)
         cylinder = get_flat_array_of_cylinder(cylinder)
         cylinders.append(cylinder)

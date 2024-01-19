@@ -38,7 +38,7 @@ def construct_graph(ys, k):
     edges = np.empty((0, 2), dtype=int)
     for y in ys:
         distances = np.linalg.norm(ys - y, axis=1)
-        neighbours = np.argsort(distances)[:k+1]
+        neighbours = np.argsort(distances)[:k + 1]
         all_pairs = np.array(list(combinations(neighbours, 2)))
         edges = np.vstack((edges, all_pairs))
     return np.unique(edges, axis=0)
@@ -113,10 +113,12 @@ def compute_rre_median(ld_embedding, reconstructed_y):
 def compute_rre(ld_embedding, reconstructed_y):
     return np.linalg.norm(ld_embedding - reconstructed_y, axis=1) / np.linalg.norm(ld_embedding, axis=1)
 
+
 def diff_of_edges_lengths(ld_embedding, reconstructed_y, edges):
     edge_lengths_ld = np.linalg.norm(ld_embedding[edges[:, 0]] - ld_embedding[edges[:, 1]], axis=1)
     edge_lengths_rec = np.linalg.norm(reconstructed_y[edges[:, 0]] - reconstructed_y[edges[:, 1]], axis=1)
     return edge_lengths_ld - edge_lengths_rec
+
 
 def plot_rre_heatmap(rre, reconstructed_y):
     fig = plt.figure(figsize=(6, 6))
@@ -146,20 +148,41 @@ def plot_two_embeddings_3d(ld_embedding, reconstructed_y):
     plt.show()
 
 
-def plot_embeddings_vs_parameters(ld_embedding, reconstructed_y):
-    fig = plt.figure(figsize=(14, 7))
+def plot_embeddings_vs_parameters(params, embedding, param_names=None, edges=None):
+    _, params_cnt = np.shape(params)
+    if param_names is None:
+        param_names = [f"param_{i}" for i in range(params_cnt)]
+    fig, axs = plt.subplots(params_cnt, 2, figsize=(14, params_cnt * (params_cnt - 1) * 7 / 2))
+    cnt = 0
+    for i in range(1, params_cnt):
+        for j in range(i):
+            axs[cnt, 0].scatter(params[:, j], params[:, i], s=10, c=params[:, j], cmap=plt.cm.Spectral)
+            axs[cnt, 0].set_title('Params')
+            axs[cnt, 0].set_xlabel(param_names[j])
+            axs[cnt, 0].set_ylabel(param_names[i])
 
-    rec_plot = fig.add_subplot(1, 2, 2)
-    rec_plot.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=10, c=reconstructed_y[:, 0], cmap=plt.cm.Spectral)
-    rec_plot.set_title('Reconstructed Embedding')
+            axs[cnt, 1].scatter(embedding[:, j], embedding[:, i], s=10, c=embedding[:, j], cmap=plt.cm.Spectral)
+            axs[cnt, 1].set_title('Embedding')
+            axs[cnt, 1].set_xlabel(param_names[j])
+            axs[cnt, 1].set_ylabel(param_names[i])
+            if edges is None:
+                axs[cnt, 0].set_xlim(axs[cnt, 1].get_xlim())
+                axs[cnt, 0].set_ylim(axs[cnt, 1].get_ylim())
+            else:
+                edge_colors = ['red', 'green', 'blue']
+                edge_colors = [edge_colors[random.randint(0, 2)] for _ in range(len(edges))]
+                params_seg = np.hstack((params[edges[:, 0]][:, [j, i]], params[edges[:, 1]][:, [j, i]]))
+                params_seg = params_seg.reshape((-1, 2, 2))
+                rec_edges = LineCollection(params_seg, colors=edge_colors, alpha=0.5)
+                axs[cnt, 0].add_collection(rec_edges)
 
-    ld_plot = fig.add_subplot(1, 2, 1)
-    ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=10, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
-    ld_plot.set_title('Params')
-    ld_plot.set_xlim(rec_plot.get_xlim())
-    ld_plot.set_ylim(rec_plot.get_ylim())
-
+                ld_segments = np.hstack((embedding[edges[:, 0]][:, [j, i]], embedding[edges[:, 1]][:, [j, i]]))
+                ld_segments = ld_segments.reshape((-1, 2, 2))
+                ld_edges = LineCollection(ld_segments, colors=edge_colors, alpha=0.5)
+                axs[cnt, 1].add_collection(ld_edges)
+            cnt += 1
     plt.show()
+
 
 def plot_two_embeddings_with_edges(ld_embedding, reconstructed_y, edges):
     fig = plt.figure(figsize=(14, 7))
@@ -171,9 +194,12 @@ def plot_two_embeddings_with_edges(ld_embedding, reconstructed_y, edges):
     ld_plot.set_ylim(rec_plot.get_ylim())
     ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=25, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
     for i, j in edges:
-        rec_plot.plot([reconstructed_y[i, 0], reconstructed_y[j, 0]], [reconstructed_y[i, 1], reconstructed_y[j, 1]], color='black', linestyle='-', linewidth=1)
-        ld_plot.plot([ld_embedding[i, 0], ld_embedding[j, 0]], [ld_embedding[i, 1], ld_embedding[j, 1]], color='black', linestyle='-', linewidth=1)
+        rec_plot.plot([reconstructed_y[i, 0], reconstructed_y[j, 0]], [reconstructed_y[i, 1], reconstructed_y[j, 1]],
+                      color='black', linestyle='-', linewidth=1)
+        ld_plot.plot([ld_embedding[i, 0], ld_embedding[j, 0]], [ld_embedding[i, 1], ld_embedding[j, 1]], color='black',
+                     linestyle='-', linewidth=1)
     plt.show()
+
 
 def plot_graph(edges, ld_embedding, reconstructed_y):
     fig, axes = plt.subplots(1, 2, figsize=(14, 7))
