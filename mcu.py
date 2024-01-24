@@ -1,3 +1,4 @@
+import dataset_generator
 from swiss_roll_dataset_generator import get_p
 import random
 import matplotlib.pyplot as plt
@@ -38,7 +39,7 @@ def construct_graph(ys, k):
     edges = np.empty((0, 2), dtype=int)
     for y in ys:
         distances = np.linalg.norm(ys - y, axis=1)
-        neighbours = np.argsort(distances)[:k+1]
+        neighbours = np.argsort(distances)[:k + 1]
         all_pairs = np.array(list(combinations(neighbours, 2)))
         edges = np.vstack((edges, all_pairs))
     return np.unique(edges, axis=0)
@@ -113,10 +114,12 @@ def compute_rre_median(ld_embedding, reconstructed_y):
 def compute_rre(ld_embedding, reconstructed_y):
     return np.linalg.norm(ld_embedding - reconstructed_y, axis=1) / np.linalg.norm(ld_embedding, axis=1)
 
+
 def diff_of_edges_lengths(ld_embedding, reconstructed_y, edges):
     edge_lengths_ld = np.linalg.norm(ld_embedding[edges[:, 0]] - ld_embedding[edges[:, 1]], axis=1)
     edge_lengths_rec = np.linalg.norm(reconstructed_y[edges[:, 0]] - reconstructed_y[edges[:, 1]], axis=1)
     return edge_lengths_ld - edge_lengths_rec
+
 
 def plot_rre_heatmap(rre, reconstructed_y):
     fig = plt.figure(figsize=(6, 6))
@@ -161,6 +164,7 @@ def plot_embeddings_vs_parameters(ld_embedding, reconstructed_y):
 
     plt.show()
 
+
 def plot_two_embeddings_with_edges(ld_embedding, reconstructed_y, edges):
     fig = plt.figure(figsize=(14, 7))
     rec_plot = fig.add_subplot(1, 2, 2)
@@ -171,9 +175,12 @@ def plot_two_embeddings_with_edges(ld_embedding, reconstructed_y, edges):
     ld_plot.set_ylim(rec_plot.get_ylim())
     ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=25, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
     for i, j in edges:
-        rec_plot.plot([reconstructed_y[i, 0], reconstructed_y[j, 0]], [reconstructed_y[i, 1], reconstructed_y[j, 1]], color='black', linestyle='-', linewidth=1)
-        ld_plot.plot([ld_embedding[i, 0], ld_embedding[j, 0]], [ld_embedding[i, 1], ld_embedding[j, 1]], color='black', linestyle='-', linewidth=1)
+        rec_plot.plot([reconstructed_y[i, 0], reconstructed_y[j, 0]], [reconstructed_y[i, 1], reconstructed_y[j, 1]],
+                      color='black', linestyle='-', linewidth=1)
+        ld_plot.plot([ld_embedding[i, 0], ld_embedding[j, 0]], [ld_embedding[i, 1], ld_embedding[j, 1]], color='black',
+                     linestyle='-', linewidth=1)
     plt.show()
+
 
 def plot_graph(edges, ld_embedding, reconstructed_y):
     fig, axes = plt.subplots(1, 2, figsize=(14, 7))
@@ -223,4 +230,91 @@ def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, 
         x_opt = dual_annealing(x_error, bounds=list(zip(lw, up)), seed=seed)
     return x_opt.x, x_error(x_opt.x)
 
-# def plot_predictive_optimization_error(x_opt, x_real):
+
+def test_predictive_optimization(lw, up, p, k, figures_generator, figure_point_cnt,
+                                 centered_y, ld_embedding, regression_matrix, y_means, y_scaler,
+                                 x_stds, x_means, noise_level=0, pieces_cnt=10, test_data_size=50,
+                                 same_value=False):
+    intervals = [np.linspace(lw[0], up[0], pieces_cnt + 1), np.linspace(lw[1], up[1], pieces_cnt + 1)]
+    interval_runs = np.empty(shape=(pieces_cnt, pieces_cnt, 3, 2))
+    for i in range(pieces_cnt):
+        for j in range(pieces_cnt):
+            interval_lw = [intervals[0][i], intervals[1][j]]
+            interval_up = [intervals[0][i + 1], intervals[1][j + 1]]
+            if same_value:
+                interval_lw = interval_up
+            test_control_vars = dataset_generator.get_control_vars(deterministic=False,
+                                                                   dimensionality=p,
+                                                                   size=test_data_size,
+                                                                   lw=interval_lw, up=interval_up)
+            test_rolls = figures_generator(test_control_vars, noise_level=noise_level,
+                                           min_num_points=figure_point_cnt)
+            x_opts = []
+            for (roll, control_var) in zip(test_rolls, test_control_vars):
+                x_opt, x_err = predictive_optimization(roll, centered_y, ld_embedding, regression_matrix, y_means,
+                                                       y_scaler, k)
+                x_opt = x_opt * x_stds + x_means
+                x_opts.append(x_opt)
+                print("-----------")
+                print(f"x_opt  = {x_opt}, x_err = {x_err}")
+                print(f"x_real = {control_var}")
+            x_ops = np.array(x_opts)
+            test_control_vars = np.array(test_control_vars)
+            errors = x_opts - test_control_vars
+            errors0 = np.power(errors[:, 0], 2)
+            errors1 = np.power(errors[:, 1], 2)
+            errors_common = np.linalg.norm(errors, axis=1)
+            interval_runs[i, j] = [[np.median(errors0), np.percentile(errors0, 75) - np.percentile(errors0, 25)],
+                                   [np.median(errors1), np.percentile(errors1, 75) - np.percentile(errors1, 25)],
+                                   [np.median(errors_common),
+                                    np.percentile(errors_common, 75) - np.percentile(errors_common, 25)]]
+            print(errors0)
+            print(errors1)
+            print(errors_common)
+    return interval_runs
+
+
+def plot_predictive_optimization_heatmaps(lw, up, pieces_cnt, interval_runs):
+    _values = np.linspace(lw[0], up[0], pieces_cnt + 1)
+    y_values = np.linspace(lw[1], up[1], pieces_cnt + 1)[::-1]
+
+    fig, axs = plt.subplots(2, 3, figsize=(24, 16))
+
+    imgs = []
+    cbars = []
+
+    for k in range(3):
+        imgs.append(axs[0, k].imshow(interval_runs[:, :, k, 0], cmap='YlGnBu', interpolation='nearest'))
+        axs[0, k].set_xlabel('Height')
+        axs[0, k].set_ylabel('Radius')
+        axs[0, k].set_xticks(np.arange(pieces_cnt+1) - 0.5, [f'{x:.1f}' for x in x_values])
+        axs[0, k].set_yticks(np.arange(pieces_cnt+1) - 0.5, [f'{y:.1f}' for y in y_values])
+        fig.colorbar(imgs[-1], ax=axs[0, k])
+
+        for i in range(pieces_cnt):
+            for j in range(pieces_cnt):
+                axs[0, k].text(j, i, f'{interval_runs[i, j, k, 0]:.1f}', ha='center', va='center', color='black')
+
+    axs[0, 0].set_title('Height Error')
+    axs[0, 1].set_title('Radius Error')
+    axs[0, 2].set_title('Norm of (height, readius) error')
+
+    for k in range(3):
+        imgs.append(axs[1, k].imshow(interval_runs[:, :, k, 1], cmap='YlGnBu', interpolation='nearest'))
+        axs[1, k].set_xlabel('Height')
+        axs[1, k].set_ylabel('Radius')
+        axs[1, k].set_xticks(np.arange(pieces_cnt+1) - 0.5, [f'{x:.1f}' for x in x_values])
+        axs[1, k].set_yticks(np.arange(pieces_cnt+1) - 0.5, [f'{y:.1f}' for y in y_values])
+        fig.colorbar(imgs[-1], ax=axs[1, k])
+
+        for i in range(pieces_cnt):
+            for j in range(pieces_cnt):
+                axs[1, k].text(j, i, f'{interval_runs[i, j, k, 1]:.1f}', ha='center', va='center', color='black')
+
+    axs[1, 0].set_title('Height IQR')
+    axs[1, 1].set_title('Radius IQR')
+    axs[1, 2].set_title('Norm of (height, readius) IQR')
+
+
+    plt.tight_layout()
+    plt.show()

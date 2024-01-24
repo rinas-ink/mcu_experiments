@@ -72,11 +72,11 @@ def get_flat_array_of_cylinder(points):
     return np.column_stack(points).reshape(-1)
 
 
-def generate_array_of_cylinders(control_vars, noise_level=0.1, num_points=100, sorted=False,
+def generate_array_of_cylinders(control_vars, noise_level=0.1, min_num_points=100, sorted=False,
                                 deterministic_scatter=False):
     cylinders = []
     for height, radius in control_vars:
-        cylinder = generate_cylinder_points(height, radius, sorted, num_points, deterministic_scatter)
+        cylinder = generate_cylinder_points(height, radius, sorted, min_num_points, deterministic_scatter)
         cylinder = dataset_generator.add_noise_to_points(cylinder, noise_level)
         cylinder = get_flat_array_of_cylinder(cylinder)
         cylinders.append(cylinder)
