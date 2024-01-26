@@ -1,5 +1,8 @@
-| Experiment | Description | Number of iterations | Scale | Result | Seed | Log file |
-|------------|-------------|----------------------|-------|--------|------|----------|
-| Experiment 1 | SCS | 200'000 | 0.1 | inaccurate with pri res 8.62e+02 | 179 | log1.txt |
-| Experiment 2 | SCS | 100'000 | 1e5 | inaccurate with pri res 1.10e+03 | 179 | log2.txt |
-| Experiment 3 | SCS | 582'950 | 1e7 | optimal with pri res 1.99e+02 | 179 | log3.txt |
+| File name       | Number of iterations | Scale    | Seed  | Reconstruction err  | Prediction err |
+|-----------------|----------------------|----------|-------|---------------------|----------------|
+| log_57_1.txt    | 514'875              | adaptive | 57    | 0.07573             | 1.14492        |
+| log_57_2.txt    | 152'775              | 2.50e-04 | 57    | 0.08585             | 1.18075        |
+| log_179_1.txt   | 535'675              | adaptive | 179   | 0.08191             | 1.08840        |
+| log_179_2.txt   | 239'925              | 2.50e-04 | 179   | 0.09735             | 1.09068        |
+| log_79707_1.txt | 656'175              | adaptive | 79707 | 0.05285             | 0.98215        |
+| log_79707_2.txt | 279'400              | 2.50e-04 | 79707 | 0.06364             | 1.06194        |
