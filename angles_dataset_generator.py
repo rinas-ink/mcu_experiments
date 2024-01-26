@@ -52,8 +52,7 @@ def create_figure(point, scale, noise=True, angles=(0, 0, 0)):
               create_plane(point, scale, 'yz', noise),
               create_plane(point, scale, 'xz', noise)]
 
-    rotation_matrix = dataset_generator.get_rotation_matrix(*get_radians(angles))
-    rotated_planes = rotate_planes(planes, rotation_matrix)
+    rotated_planes = [dataset_generator.rotate_points(plane, *angles) for plane in planes]
 
     return rotated_planes
 

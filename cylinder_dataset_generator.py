@@ -5,7 +5,7 @@ import itertools
 import numpy as np
 
 
-def generate_cylinder_points(min_num_points, height, radius):
+def generate_cylinder_points(min_num_points, height=10, radius=5, angle_x=0):
     """
     :param min_num_points: if deterministic_scatter=True then there generated a number of points,
      equal to the first square >= min_num_points
@@ -25,6 +25,7 @@ def generate_cylinder_points(min_num_points, height, radius):
     y = radius * np.sin(angles)
 
     points = np.column_stack((x, y, heights))
+    points = dataset_generator.rotate_points(points, angle_x=angle_x)
 
     return points
 

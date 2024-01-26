@@ -13,7 +13,7 @@ from skimage.filters import threshold_otsu
 def standardize(data):
     means = np.mean(data, axis=0)
     stds = np.std(data, axis=0)
-    stds[stds == 0] = 1  #  To avoid division by 0
+    stds[stds == 0] = 1  # To avoid division by 0
     return (data - means) / stds, means, stds
 
 
@@ -154,7 +154,9 @@ def plot_embeddings_vs_parameters(params, embedding, param_names=None, edges=Non
     _, params_cnt = np.shape(params)
     if param_names is None:
         param_names = [f"param_{i}" for i in range(params_cnt)]
-    fig, axs = plt.subplots(params_cnt, 2, figsize=(14, params_cnt * (params_cnt - 1) * 7 / 2))
+    fig, axs = plt.subplots(params_cnt * (params_cnt - 1) // 2, 2, figsize=(14, params_cnt * (params_cnt - 1) * 7 / 2))
+    if axs.ndim == 1:
+        axs = np.array([axs])
     cnt = 0
     for i in range(1, params_cnt):
         for j in range(i):
@@ -168,8 +170,8 @@ def plot_embeddings_vs_parameters(params, embedding, param_names=None, edges=Non
             axs[cnt, 1].set_xlabel(param_names[j])
             axs[cnt, 1].set_ylabel(param_names[i])
             if edges is None:
-                axs[cnt, 0].set_xlim(axs[cnt, 1].get_xlim())
-                axs[cnt, 0].set_ylim(axs[cnt, 1].get_ylim())
+                axs[cnt, 1].set_xlim(1.1 * np.percentile(embedding[:, j], 10), 1.1 * np.percentile(embedding[:, j], 90))
+                axs[cnt, 1].set_ylim(1.1 * np.percentile(embedding[:, i], 10), 1.1 * np.percentile(embedding[:, i], 90))
             else:
                 edge_colors = ['red', 'green', 'blue']
                 edge_colors = [edge_colors[random.randint(0, 2)] for _ in range(len(edges))]

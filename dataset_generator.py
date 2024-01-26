@@ -25,6 +25,16 @@ def add_noise_to_points(points, noise_level=0.1):
 
 
 def rotate_points(points, angle_x=0, angle_y=0, angle_z=0):
+    """
+    :param points: np array of tuples [x, y, z], that represent 3d coordinates of point
+    :param angle_x: around X axis, in degrees
+    :param angle_y: around Y axis, in degrees
+    :param angle_z: around Z axis, in degrees
+    :return: rotated cloud of points
+    """
+    angle_x = np.radians(angle_x)
+    angle_y = np.radians(angle_y)
+    angle_z = np.radians(angle_z)
     rotation_matrix_x = np.array([
         [1, 0, 0],
         [0, np.cos(angle_x), -np.sin(angle_x)],
