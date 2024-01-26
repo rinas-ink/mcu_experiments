@@ -34,7 +34,7 @@ def get_c():
 # Returns indices of k nearest neighbours of y in ys and y itself
 def k_nearest_neighbours(ys, y, k):
     distances = np.round(np.linalg.norm(ys - y, axis=1), 12)
-    neighbours = np.argsort(distances, kind='stable')[:k+1]
+    neighbours = np.argsort(distances, kind='stable')[:k + 1]
     return neighbours
 
 
@@ -47,12 +47,10 @@ def construct_graph(ys, k):
         edges = np.vstack((edges, all_pairs))
     return np.unique(edges, axis=0)
 
-
-def solve_semidefinite_programming(xs, ys, edges, c, adaptive_scale_sdp=True, scale_sdp=0.1):
+def solve_semidefinite_programming(xs, ys, edges, c=get_c(), adaptive_scale_sdp=True, scale_sdp=0.1):
     n = xs.shape[0]
     p = np.dot(ys, ys.T)
     q = cvxpy.Variable((n, n), PSD=True)
-    c = get_c()
     constraints = [cvxpy.trace(np.ones((n, n)) @ q) == 0]
     constraints += [cvxpy.trace(q) <= (n - 1) * c]
     constraints += [
@@ -96,7 +94,7 @@ def regress(y_, x):
     return B
 
 
-def prepare_data(control_vars, figures, k):
+def prepare_data(control_vars, figures, k=get_k()):
     control_vars, x_means, x_stds = standardize(control_vars)
     figures, y_means = center(figures)
     figures, y_scaler = scale(figures)
@@ -169,6 +167,18 @@ def plot_embeddings_vs_parameters(ld_embedding, reconstructed_y):
     plt.show()
 
 
+def compute_3d_rre_median(ld_embedding, reconstructed_y):
+    slices = [slice(None, 2), slice(1, None), [0, -1]]
+    rre_arr = []
+
+    for i, sl in enumerate(slices):
+        ld_emb_slice = ld_embedding[:, sl]
+        rec_y_slice = reconstructed_y[:, sl]
+        rre_arr.append(compute_rre_median(ld_emb_slice, rec_y_slice))
+
+    return np.array(rre_arr)
+
+
 def plot_two_embeddings_with_edges(ld_embedding, reconstructed_y, edges):
     fig = plt.figure(figsize=(14, 7))
     rec_plot = fig.add_subplot(1, 2, 2)
@@ -179,8 +189,10 @@ def plot_two_embeddings_with_edges(ld_embedding, reconstructed_y, edges):
     ld_plot.set_ylim(rec_plot.get_ylim())
     ld_plot.scatter(ld_embedding[:, 0], ld_embedding[:, 1], s=25, c=ld_embedding[:, 0], cmap=plt.cm.Spectral)
     for i, j in edges:
-        rec_plot.plot([reconstructed_y[i, 0], reconstructed_y[j, 0]], [reconstructed_y[i, 1], reconstructed_y[j, 1]], color='black', linestyle='-', linewidth=1)
-        ld_plot.plot([ld_embedding[i, 0], ld_embedding[j, 0]], [ld_embedding[i, 1], ld_embedding[j, 1]], color='black', linestyle='-', linewidth=1)
+        rec_plot.plot([reconstructed_y[i, 0], reconstructed_y[j, 0]], [reconstructed_y[i, 1], reconstructed_y[j, 1]],
+                      color='black', linestyle='-', linewidth=1)
+        ld_plot.plot([ld_embedding[i, 0], ld_embedding[j, 0]], [ld_embedding[i, 1], ld_embedding[j, 1]], color='black',
+                     linestyle='-', linewidth=1)
     plt.show()
 
 
@@ -210,6 +222,7 @@ def plot_graph(edges, ld_embedding, reconstructed_y):
 
 
 def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler, k, seed=-1):
+
     y_nom = (y_nom - y_means) / y_scaler
     distances = np.linalg.norm(centered_y - y_nom, axis=1)
     neighbours = np.argsort(distances)[:k]
