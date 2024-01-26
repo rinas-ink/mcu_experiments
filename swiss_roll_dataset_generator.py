@@ -13,11 +13,15 @@ def get_p():
     return 2
 
 
-def swiss_roll_function(x, y, c1, c2):
+def generate_swiss_roll(min_num_points, c1, c2):
+    sqrt_num_points = int(math.ceil(math.sqrt(min_num_points)))
+    X, Y = get_meshgrid(sqrt_num_points)
+    X, Y = X.ravel(), Y.ravel()
     r = 1 + c2 / 10
-    x_val = (4 / 9 * c1 + 50 / 9) * x * np.cos(2 * np.pi * r * (x - 4) / 12)
-    z_val = (4 / 9 * c1 + 50 / 9) * x * np.sin(2 * np.pi * r * (x - 4) / 12)
-    return x_val, y, z_val
+    x_val = (4 / 9 * c1 + 50 / 9) * X * np.cos(2 * np.pi * r * (X - 4) / 12)
+    z_val = (4 / 9 * c1 + 50 / 9) * X * np.sin(2 * np.pi * r * (X - 4) / 12)
+    points = np.column_stack((x_val, Y, z_val)).T
+    return points
 
 
 def get_meshgrid(n):
@@ -43,27 +47,3 @@ def visualize_swiss_roll(x, y, z):
     ax.set_zlabel('Z')
     plt.show()
 
-
-def get_flat_array_of_swiss_roll(x_swiss_roll, y_swiss_roll, z_swiss_roll):
-    return np.column_stack((x_swiss_roll, y_swiss_roll, z_swiss_roll)).reshape(-1)
-
-
-def generate_array_of_swiss_rolls(control_vars, noise_level=0.1, min_num_points=1600):
-    """
-    :return: List N*M, where M is from the article = len (all points concatenated)
-    """
-    sqrt_num_points = int(math.ceil(math.sqrt(min_num_points)))
-    X, Y = get_meshgrid(sqrt_num_points)
-    X, Y = X.ravel(), Y.ravel()
-    samples = []
-    for i in range(len(control_vars)):
-        c_size, c_degree = control_vars[i]
-        x_swiss_roll, y_swiss_roll, z_swiss_roll = swiss_roll_function(X, Y, c_size, c_degree)
-        # visualize_swiss_roll(x_swiss_roll, y_swiss_roll, z_swiss_roll)
-        # break
-        sample = get_flat_array_of_swiss_roll(x_swiss_roll, y_swiss_roll, z_swiss_roll)
-        samples.append(sample)
-
-    samples = dataset_generator.add_noise_to_points(np.array(samples), noise_level=noise_level)
-
-    return samples

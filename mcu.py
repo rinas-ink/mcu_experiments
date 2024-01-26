@@ -13,6 +13,7 @@ from skimage.filters import threshold_otsu
 def standardize(data):
     means = np.mean(data, axis=0)
     stds = np.std(data, axis=0)
+    stds[stds == 0] = 1  #  To avoid division by 0
     return (data - means) / stds, means, stds
 
 
@@ -243,7 +244,7 @@ def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, 
     return x_opt.x, x_error(x_opt.x)
 
 
-def test_predictive_optimization(lw, up, p, k, figures_generator, figure_point_cnt,
+def test_predictive_optimization(lw, up, p, k, figure_generator, figure_point_cnt,
                                  centered_y, ld_embedding, regression_matrix, y_means, y_scaler,
                                  x_stds, x_means, noise_level=0, pieces_cnt=10, test_data_size=50,
                                  same_value=False):
@@ -259,8 +260,9 @@ def test_predictive_optimization(lw, up, p, k, figures_generator, figure_point_c
                                                                    dimensionality=p,
                                                                    size=test_data_size,
                                                                    lw=interval_lw, up=interval_up)
-            test_rolls = figures_generator(test_control_vars, noise_level=noise_level,
-                                           min_num_points=figure_point_cnt)
+            test_rolls = dataset_generator.generate_array_of_figures(test_control_vars, figure_generator,
+                                                                     noise_level=noise_level,
+                                                                     min_num_points=figure_point_cnt)
             x_opts = []
             for (roll, control_var) in zip(test_rolls, test_control_vars):
                 x_opt, x_err = predictive_optimization(roll, centered_y, ld_embedding, regression_matrix, y_means,
@@ -273,8 +275,8 @@ def test_predictive_optimization(lw, up, p, k, figures_generator, figure_point_c
             x_ops = np.array(x_opts)
             test_control_vars = np.array(test_control_vars)
             errors = x_opts - test_control_vars
-            errors0 = np.power(errors[:, 0], 2)
-            errors1 = np.power(errors[:, 1], 2)
+            errors0 = abs(errors[:, 0])
+            errors1 = abs(errors[:, 1])
             errors_common = np.linalg.norm(errors, axis=1)
             interval_runs[i, j] = [[np.median(errors0), np.percentile(errors0, 75) - np.percentile(errors0, 25)],
                                    [np.median(errors1), np.percentile(errors1, 75) - np.percentile(errors1, 25)],
@@ -287,7 +289,7 @@ def test_predictive_optimization(lw, up, p, k, figures_generator, figure_point_c
 
 
 def plot_predictive_optimization_heatmaps(lw, up, pieces_cnt, interval_runs):
-    _values = np.linspace(lw[0], up[0], pieces_cnt + 1)
+    x_values = np.linspace(lw[0], up[0], pieces_cnt + 1)
     y_values = np.linspace(lw[1], up[1], pieces_cnt + 1)[::-1]
 
     fig, axs = plt.subplots(2, 3, figsize=(24, 16))
@@ -299,8 +301,8 @@ def plot_predictive_optimization_heatmaps(lw, up, pieces_cnt, interval_runs):
         imgs.append(axs[0, k].imshow(interval_runs[:, :, k, 0], cmap='YlGnBu', interpolation='nearest'))
         axs[0, k].set_xlabel('Height')
         axs[0, k].set_ylabel('Radius')
-        axs[0, k].set_xticks(np.arange(pieces_cnt+1) - 0.5, [f'{x:.1f}' for x in x_values])
-        axs[0, k].set_yticks(np.arange(pieces_cnt+1) - 0.5, [f'{y:.1f}' for y in y_values])
+        axs[0, k].set_xticks(np.arange(pieces_cnt + 1) - 0.5, [f'{x:.1f}' for x in x_values])
+        axs[0, k].set_yticks(np.arange(pieces_cnt + 1) - 0.5, [f'{y:.1f}' for y in y_values])
         fig.colorbar(imgs[-1], ax=axs[0, k])
 
         for i in range(pieces_cnt):
@@ -315,8 +317,8 @@ def plot_predictive_optimization_heatmaps(lw, up, pieces_cnt, interval_runs):
         imgs.append(axs[1, k].imshow(interval_runs[:, :, k, 1], cmap='YlGnBu', interpolation='nearest'))
         axs[1, k].set_xlabel('Height')
         axs[1, k].set_ylabel('Radius')
-        axs[1, k].set_xticks(np.arange(pieces_cnt+1) - 0.5, [f'{x:.1f}' for x in x_values])
-        axs[1, k].set_yticks(np.arange(pieces_cnt+1) - 0.5, [f'{y:.1f}' for y in y_values])
+        axs[1, k].set_xticks(np.arange(pieces_cnt + 1) - 0.5, [f'{x:.1f}' for x in x_values])
+        axs[1, k].set_yticks(np.arange(pieces_cnt + 1) - 0.5, [f'{y:.1f}' for y in y_values])
         fig.colorbar(imgs[-1], ax=axs[1, k])
 
         for i in range(pieces_cnt):
@@ -326,7 +328,6 @@ def plot_predictive_optimization_heatmaps(lw, up, pieces_cnt, interval_runs):
     axs[1, 0].set_title('Height IQR')
     axs[1, 1].set_title('Radius IQR')
     axs[1, 2].set_title('Norm of (height, readius) IQR')
-
 
     plt.tight_layout()
     plt.show()

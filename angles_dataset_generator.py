@@ -1,5 +1,7 @@
 import random
 import numpy as np
+
+import dataset_generator
 from vizualize_angles import plot_figure, init_viz, show, set_labels, set_title
 
 N = 50
@@ -17,13 +19,8 @@ def get_max_value():
     return 50
 
 
-def add_noise(A, B, C, noise_level=0.05):
-    A += np.random.normal(0, noise_level, A.shape)
-    B += np.random.normal(0, noise_level, B.shape)
-    C += np.random.normal(0, noise_level, C.shape)
 
-
-def create_plane(point, scale, plane, noise, num=20):
+def create_plane(point, scale, plane, num=20):
     axes = {'xy': (0, 1, 2), 'yz': (1, 2, 0), 'xz': (0, 2, 1)}
     a_idx, b_idx, c_idx = axes[plane]
 
@@ -32,31 +29,12 @@ def create_plane(point, scale, plane, noise, num=20):
     A, B = np.meshgrid(a, b)
     C = np.full_like(A, point[c_idx])
 
-    if noise:
-        add_noise(A, B, C)
-
     planes = {'xy': (A, B, C), 'yz': (C, A, B), 'xz': (A, C, B)}
     return planes[plane]
 
 
 def get_radians(angles):
     return map(np.radians, angles)
-
-
-def get_rotation_matrix(angle_x_rad, angle_y_rad, angle_z_rad):
-    rotation_x = np.array([[1, 0, 0],
-                           [0, np.cos(angle_x_rad), -np.sin(angle_x_rad)],
-                           [0, np.sin(angle_x_rad), np.cos(angle_x_rad)]])
-
-    rotation_y = np.array([[np.cos(angle_y_rad), 0, np.sin(angle_y_rad)],
-                           [0, 1, 0],
-                           [-np.sin(angle_y_rad), 0, np.cos(angle_y_rad)]])
-
-    rotation_z = np.array([[np.cos(angle_z_rad), -np.sin(angle_z_rad), 0],
-                           [np.sin(angle_z_rad), np.cos(angle_z_rad), 0],
-                           [0, 0, 1]])
-
-    return np.dot(rotation_z, np.dot(rotation_y, rotation_x))
 
 
 def rotate_planes(planes, rotation_matrix):
@@ -74,7 +52,7 @@ def create_figure(point, scale, noise=True, angles=(0, 0, 0)):
               create_plane(point, scale, 'yz', noise),
               create_plane(point, scale, 'xz', noise)]
 
-    rotation_matrix = get_rotation_matrix(*get_radians(angles))
+    rotation_matrix = dataset_generator.get_rotation_matrix(*get_radians(angles))
     rotated_planes = rotate_planes(planes, rotation_matrix)
 
     return rotated_planes
@@ -104,18 +82,13 @@ def get_array_of_control_vars(noise=True, dim=get_p(), size=N,
                 matrix[i, j] = (i+j) % max_value + 1
         return matrix
 
-
-def get_flat_array_of_3d_data(x, y, z):
-    return np.column_stack((x, y, z)).reshape(-1)
-
-
 def get_array_of_figures(control_vars, num=N, noise=True):
     samples = []
     for i in range(num):
         initial_point = (0, 0, 0)
         length, width, height = control_vars[i]
         xy, yz, xz = create_figure(initial_point, scale=(length, width, height), noise=noise)
-        sample = get_flat_array_of_3d_data(xy, yz, xz)
+        sample = dataset_generator.get_flat_array_of_points((xy, yz, xz))
         samples.append(sample)
     return samples
 
