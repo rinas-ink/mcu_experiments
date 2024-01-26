@@ -1,4 +1,5 @@
 import random
+
 import numpy as np
 from vizualize_angles import plot_figure, init_viz, show, set_labels, set_title
 
@@ -120,7 +121,7 @@ def get_array_of_figures(control_vars, num=N, noise=True):
     return samples
 
 
-def main():
+def viz_rotation():
     ax = init_viz()
     initial_point = (0, 0, 0)
     angels = (45, 60, 120)
@@ -133,4 +134,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    viz_rotation()
