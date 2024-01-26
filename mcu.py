@@ -47,8 +47,7 @@ def construct_graph(ys, k):
         edges = np.vstack((edges, all_pairs))
     return np.unique(edges, axis=0)
 
-
-def solve_semidefinite_programming(xs, ys, edges, c=get_c()):
+def solve_semidefinite_programming(xs, ys, edges, c=get_c(), adaptive_scale_sdp=True, scale_sdp=0.1):
     n = xs.shape[0]
     p = np.dot(ys, ys.T)
     q = cvxpy.Variable((n, n), PSD=True)
@@ -60,8 +59,8 @@ def solve_semidefinite_programming(xs, ys, edges, c=get_c()):
 
     prob = cvxpy.Problem(cvxpy.Maximize(cvxpy.trace(xs @ xs.T @ q)), constraints)
     prob.solve(solver=cvxpy.SCS, verbose=True, \
-               max_iters=100000, scale=0.1, \
-               acceleration_lookback=10, acceleration_interval=10)
+                max_iters=1000000, acceleration_lookback=0, \
+                adaptive_scale=adaptive_scale_sdp, scale=scale_sdp)
     return q.value
 
 
