@@ -29,4 +29,4 @@ def pipeline(noise=True, plot=True, min_value=1, max_value=360):
 
 
 if __name__ == '__main__':
-    pipeline(False)
+    pipeline(noise=False)

@@ -1,6 +1,4 @@
 import dataset_generator
-from swiss_roll_dataset_generator import get_p
-import random
 import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy
@@ -28,38 +26,43 @@ def scale(data):
 
 
 def get_k():
-    return 5  # FIXME
+    return 5
 
 
 def get_c():
-    return 1e5  # FIXME
+    return 1e5
+
+
+# Returns indices of k nearest neighbours of y in ys and y itself
+def k_nearest_neighbours(ys, y, k):
+    distances = np.round(np.linalg.norm(ys - y, axis=1), 12)
+    neighbours = np.argsort(distances, kind='stable')[:k + 1]
+    return neighbours
 
 
 def construct_graph(ys, k):
     assert (0 < k < len(ys))
     edges = np.empty((0, 2), dtype=int)
     for y in ys:
-        distances = np.linalg.norm(ys - y, axis=1)
-        neighbours = np.argsort(distances)[:k + 1]
-        all_pairs = np.array(list(combinations(neighbours, 2)))
+        neighbours = k_nearest_neighbours(ys, y, k)
+        all_pairs = np.array(list(combinations(sorted(neighbours), 2)))
         edges = np.vstack((edges, all_pairs))
     return np.unique(edges, axis=0)
 
-
-def solve_semidefinite_programming(xs, ys, edges, c):
+def solve_semidefinite_programming(xs, ys, edges, c=get_c(), adaptive_scale_sdp=True, scale_sdp=0.1):
     n = xs.shape[0]
     p = np.dot(ys, ys.T)
-    q = cvxpy.Variable((n, n), symmetric=True)
-
-    constraints = [q >> 0]
-    constraints += [cvxpy.trace(np.ones((n, n)) @ q) == 0]
+    q = cvxpy.Variable((n, n), PSD=True)
+    constraints = [cvxpy.trace(np.ones((n, n)) @ q) == 0]
     constraints += [cvxpy.trace(q) <= (n - 1) * c]
     constraints += [
         q[i][i] + q[j][j] - 2 * q[i][j] == p[i][i] + p[j][j] - 2 * p[i][j] for i, j in edges
     ]
 
     prob = cvxpy.Problem(cvxpy.Maximize(cvxpy.trace(xs @ xs.T @ q)), constraints)
-    prob.solve()
+    prob.solve(solver=cvxpy.SCS, verbose=True, \
+                max_iters=1000000, acceleration_lookback=0, \
+                adaptive_scale=adaptive_scale_sdp, scale=scale_sdp)
     return q.value
 
 
@@ -93,7 +96,7 @@ def regress(y_, x):
     return B
 
 
-def prepare_data(control_vars, figures, k):
+def prepare_data(control_vars, figures, k=get_k()):
     control_vars, x_means, x_stds = standardize(control_vars)
     figures, y_means = center(figures)
     figures, y_scaler = scale(figures)
@@ -188,6 +191,18 @@ def plot_embeddings_vs_parameters(params, embedding, param_names=None, edges=Non
     plt.show()
 
 
+def compute_3d_rre_median(ld_embedding, reconstructed_y):
+    slices = [slice(None, 2), slice(1, None), [0, -1]]
+    rre_arr = []
+
+    for i, sl in enumerate(slices):
+        ld_emb_slice = ld_embedding[:, sl]
+        rec_y_slice = reconstructed_y[:, sl]
+        rre_arr.append(compute_rre_median(ld_emb_slice, rec_y_slice))
+
+    return np.array(rre_arr)
+
+
 def plot_two_embeddings_with_edges(ld_embedding, reconstructed_y, edges):
     fig = plt.figure(figsize=(14, 7))
     rec_plot = fig.add_subplot(1, 2, 2)
@@ -209,7 +224,7 @@ def plot_graph(edges, ld_embedding, reconstructed_y):
     fig, axes = plt.subplots(1, 2, figsize=(14, 7))
 
     edge_colors = ['red', 'green', 'blue']
-    edge_colors = [edge_colors[random.randint(0, 2)] for _ in range(len(edges))]
+    edge_colors = [edge_colors[np.random.randint(0, 2)] for _ in range(len(edges))]
 
     rec_plot_graph = axes[1]
     rec_plot_graph.scatter(reconstructed_y[:, 0], reconstructed_y[:, 1], s=20, c=reconstructed_y[:, 0],
@@ -228,18 +243,6 @@ def plot_graph(edges, ld_embedding, reconstructed_y):
     ld_plot_graph.add_collection(ld_edges)
 
     plt.show()
-
-
-def compute_3d_rre_median(ld_embedding, reconstructed_y):
-    slices = [slice(None, 2), slice(1, None), [0, -1]]
-    rre_arr = []
-
-    for i, sl in enumerate(slices):
-        ld_emb_slice = ld_embedding[:, sl]
-        rec_y_slice = reconstructed_y[:, sl]
-        rre_arr.append(compute_rre_median(ld_emb_slice, rec_y_slice))
-
-    return np.array(rre_arr)
 
 
 def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, y_means, y_scaler, k, seed=-1):
