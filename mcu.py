@@ -49,6 +49,7 @@ def construct_graph(ys, k):
         edges = np.vstack((edges, all_pairs))
     return np.unique(edges, axis=0)
 
+
 def solve_semidefinite_programming(xs, ys, edges, c=get_c(), adaptive_scale_sdp=True, scale_sdp=0.1):
     n = xs.shape[0]
     p = np.dot(ys, ys.T)
@@ -60,9 +61,10 @@ def solve_semidefinite_programming(xs, ys, edges, c=get_c(), adaptive_scale_sdp=
     ]
 
     prob = cvxpy.Problem(cvxpy.Maximize(cvxpy.trace(xs @ xs.T @ q)), constraints)
-    prob.solve(solver=cvxpy.SCS, verbose=True, \
-                max_iters=1000000, acceleration_lookback=0, \
-                adaptive_scale=adaptive_scale_sdp, scale=scale_sdp)
+    # prob.solve(solver=cvxpy.SCS, verbose=True, \
+    #            max_iters=1000000, acceleration_lookback=0, \
+    #            adaptive_scale=adaptive_scale_sdp, scale=scale_sdp)
+    prob.solve()
     return q.value
 
 
@@ -177,7 +179,7 @@ def plot_embeddings_vs_parameters(params, embedding, param_names=None, edges=Non
                 axs[cnt, 1].set_ylim(1.1 * np.percentile(embedding[:, i], 10), 1.1 * np.percentile(embedding[:, i], 90))
             else:
                 edge_colors = ['red', 'green', 'blue']
-                edge_colors = [edge_colors[random.randint(0, 2)] for _ in range(len(edges))]
+                edge_colors = [edge_colors[np.random.randint(0, 3)] for _ in range(len(edges))]
                 params_seg = np.hstack((params[edges[:, 0]][:, [j, i]], params[edges[:, 1]][:, [j, i]]))
                 params_seg = params_seg.reshape((-1, 2, 2))
                 rec_edges = LineCollection(params_seg, colors=edge_colors, alpha=0.5)

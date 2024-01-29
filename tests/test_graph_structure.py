@@ -1,7 +1,9 @@
 import unittest
 import numpy as np
+
+import dataset_generator
 from dataset_generator import get_control_vars
-from swiss_roll_dataset_generator import generate_array_of_swiss_rolls, get_p
+import swiss_roll_dataset_generator as roll_gen
 from mcu import construct_graph, k_nearest_neighbours
 
 class GraphStructureTestCase(unittest.TestCase):
@@ -10,9 +12,9 @@ class GraphStructureTestCase(unittest.TestCase):
         for test_n in range(10):
             k = np.random.randint(2, 10)
             n = np.random.randint(k + 1, 100)
-            control_vars = get_control_vars(deterministic=False, dimensionality=get_p(),
+            control_vars = get_control_vars(deterministic=False, dimensionality=roll_gen.get_p(),
                                                                size=n, lw=[1, 1], up=[10, 10])
-            ys = generate_array_of_swiss_rolls(control_vars, noise_level=0.1, min_num_points=1600)
+            ys = dataset_generator.generate_array_of_figures(control_vars, roll_gen.generate_swiss_roll, noise_level=0.1, min_num_points=1600)
             edges = construct_graph(ys, k)
 
             degree = [0] * n

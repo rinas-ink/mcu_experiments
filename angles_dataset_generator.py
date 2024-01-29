@@ -1,5 +1,3 @@
-import random
-
 import numpy as np
 
 import dataset_generator
@@ -59,7 +57,7 @@ def create_figure(point, scale, noise=True, angles=(0, 0, 0)):
 
 
 def get_control_vars(n=get_p(), min_value=get_min_value(), max_value=get_max_value()):
-    return np.array([random.randint(min_value, max_value) for _ in range(n)])
+    return np.array([np.random.randint(min_value, max_value) for _ in range(n)])
 
 
 def get_array_of_control_vars(noise=True, dim=get_p(), size=N,
