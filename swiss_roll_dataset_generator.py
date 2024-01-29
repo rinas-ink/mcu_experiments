@@ -1,5 +1,4 @@
 import math
-
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -29,9 +28,8 @@ def get_meshgrid(n):
     return np.meshgrid(x, y)
 
 
-def add_noise(x, y, noise_strength=0.1):
+def add_noise(x, noise_strength=0.1):
     x += np.random.normal(0, noise_strength, x.shape)
-    y += np.random.normal(0, noise_strength, y.shape)
 
 
 def visualize_swiss_roll(x, y, z):

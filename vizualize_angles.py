@@ -3,31 +3,18 @@ import numpy as np
 
 
 def init_viz():
-    fig = plt.figure()
+    fig = plt.figure(figsize=(12, 9))
     return fig.add_subplot(111, projection='3d')
 
 
 def plot_plane(ax, x, y, z, color):
-    ax.plot_surface(x, y, z, alpha=0.5, rstride=1, cstride=1, color=color)
+    ax.plot_surface(x, y, z, alpha=0.5, color=color)
 
 
 def plot_figure(ax, planes):
     plot_plane(ax, *planes[0], color='g')
     plot_plane(ax, *planes[1], color='b')
     plot_plane(ax, *planes[2], color='r')
-
-
-def set_limits(ax, initial_point, scale):
-    ax.set_xlabel('X Axis')
-    ax.set_ylabel('Y Axis')
-    ax.set_zlabel('Z Axis')
-    ax.set_xlim([initial_point, scale])
-    ax.set_ylim([initial_point, scale])
-    ax.set_zlim([initial_point, scale])
-
-
-def change_view_point(ax):
-    ax.view_init(elev=20., azim=30)
 
 
 def set_axes_equal(ax):
@@ -52,3 +39,15 @@ def set_axes_equal(ax):
 
 def show():
     plt.show()
+
+
+def set_labels(ax):
+    ax.set_xlabel('X axis')
+    ax.set_ylabel('Y axis')
+    ax.set_zlabel('Z axis')
+
+
+def set_title(x_ang, y_ang, z_ang):
+    plt.title(f"\nx angle rotation {x_ang} degrees\n"
+              f"y angle rotation {y_ang} degrees\n"
+              f"z angle rotation {z_ang} degrees")

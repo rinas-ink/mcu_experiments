@@ -1,6 +1,4 @@
 import math
-import random
-
 import numpy as np
 
 
@@ -14,7 +12,7 @@ def get_control_vars(deterministic=True, dimensionality=2, size=100, lw=None, up
         grid_vars = [np.linspace(lw[i], up[i], grid_size) for i in range(dimensionality)]
         grids = np.meshgrid(*grid_vars)
         return np.vstack([grid.ravel() for grid in grids]).T
-    return np.array([[random.random() * (up[i] - lw[i]) + lw[i] for i in range(dimensionality)] for _ in range(size)])
+    return np.array([[np.random.random() * (up[i] - lw[i]) + lw[i] for i in range(dimensionality)] for _ in range(size)])
 
 
 def add_noise_to_points(points, noise_level=0.1):
