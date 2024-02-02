@@ -275,86 +275,116 @@ def test_predictive_optimization(lw, up, p, k, figure_generator, figure_point_cn
                                  centered_y, ld_embedding, regression_matrix, y_means, y_scaler,
                                  x_stds, x_means, noise_level=0, pieces_cnt=10, test_data_size=50,
                                  same_value=False):
-    intervals = [np.linspace(lw[0], up[0], pieces_cnt + 1), np.linspace(lw[1], up[1], pieces_cnt + 1)]
-    interval_runs = np.empty(shape=(pieces_cnt, pieces_cnt, 3, 2))
-    for i in range(pieces_cnt):
-        for j in range(pieces_cnt):
-            interval_lw = [intervals[0][i], intervals[1][j]]
-            interval_up = [intervals[0][i + 1], intervals[1][j + 1]]
-            if same_value:
-                interval_lw = interval_up
-            test_control_vars = dataset_generator.get_control_vars(deterministic=False,
-                                                                   dimensionality=p,
-                                                                   size=test_data_size,
-                                                                   lw=interval_lw, up=interval_up)
-            test_rolls = dataset_generator.generate_array_of_figures(test_control_vars, figure_generator,
-                                                                     noise_level=noise_level,
-                                                                     min_num_points=figure_point_cnt)
-            x_opts = []
-            for (roll, control_var) in zip(test_rolls, test_control_vars):
-                x_opt, x_err = predictive_optimization(roll, centered_y, ld_embedding, regression_matrix, y_means,
-                                                       y_scaler, k)
-                x_opt = x_opt * x_stds + x_means
-                x_opts.append(x_opt)
-                print("-----------")
-                print(f"x_opt  = {x_opt}, x_err = {x_err}")
-                print(f"x_real = {control_var}")
-            x_ops = np.array(x_opts)
-            test_control_vars = np.array(test_control_vars)
-            errors = x_opts - test_control_vars
-            errors0 = abs(errors[:, 0])
-            errors1 = abs(errors[:, 1])
-            errors_common = np.linalg.norm(errors, axis=1)
-            interval_runs[i, j] = [[np.median(errors0), np.percentile(errors0, 75) - np.percentile(errors0, 25)],
-                                   [np.median(errors1), np.percentile(errors1, 75) - np.percentile(errors1, 25)],
-                                   [np.median(errors_common),
-                                    np.percentile(errors_common, 75) - np.percentile(errors_common, 25)]]
-            print(errors0)
-            print(errors1)
-            print(errors_common)
-    return interval_runs
+    intervals = [np.linspace(lw[i], up[i], pieces_cnt + 1) for i in range(p)]
+    interval_runs_shape = tuple([pieces_cnt] * p + [p + 1, 2])
+    interval_runs = np.empty(shape=interval_runs_shape)
+    pieces_intervals = []
+
+    for indices in np.ndindex(*[pieces_cnt] * p):
+        interval_lw = np.array([intervals[dim][index] for dim, index in enumerate(indices)])
+        interval_up = np.array([intervals[dim][index + 1] for dim, index in enumerate(indices)])
+
+        if same_value:
+            interval_lw = interval_up
+
+        test_control_vars = dataset_generator.get_control_vars(deterministic=False,
+                                                               dimensionality=p,
+                                                               size=test_data_size,
+                                                               lw=interval_lw, up=interval_up)
+        test_rolls = dataset_generator.generate_array_of_figures(test_control_vars, figure_generator,
+                                                                 noise_level=noise_level,
+                                                                 min_num_points=figure_point_cnt)
+        x_opts = []
+        for (roll, control_var) in zip(test_rolls, test_control_vars):
+            x_opt, x_err = predictive_optimization(roll, centered_y, ld_embedding, regression_matrix, y_means,
+                                                   y_scaler, k)
+            x_opt = x_opt * x_stds + x_means
+            x_opts.append(x_opt)
+            print("-----------")
+            print(f"x_opt  = {x_opt}, x_err = {x_err}")
+            print(f"x_real = {control_var}")
+
+        x_opts = np.array(x_opts)
+        test_control_vars = np.array(test_control_vars)
+        errors = x_opts - test_control_vars
+        errors_common = np.linalg.norm(errors, axis=1)
+
+        interval_runs[indices] = [
+                                     [np.median(abs(errors[:, dim])),
+                                      np.percentile(abs(errors[:, dim]), 75) - np.percentile(abs(errors[:, dim]), 25)]
+                                     for dim in range(p)
+                                 ] + [[np.median(errors_common),
+                                       np.percentile(errors_common, 75) - np.percentile(errors_common, 25)]]
+
+        for dim in range(p):
+            print(f'errors{dim} = {abs(errors[:, dim])}')
+
+        pieces_intervals.append(np.column_stack((interval_lw, interval_up)).T)
+
+    return interval_runs, np.array(pieces_intervals)
 
 
-def plot_predictive_optimization_heatmaps(lw, up, pieces_cnt, interval_runs):
+def plot_2d_predictive_optimization_heatmaps(lw, up, pieces_cnt, interval_runs, p, all_param_names=None,
+                                             fixed_params_map=None, intervals = None):
+    """
+
+    :param lw: np.array of lower values for each parameter
+    :param up: np.array of upper values for each parameter
+    :param pieces_cnt: amount of pieces on which we cut each value range of parameters
+    :param interval_runs: interval runs from `test_predictive_optimization`
+    :param p: amount of parameters
+    :param fixed_params_map: dictionary, that represents which parameter at which piece we fix.
+    For example {0:1}, when p=3, means that we make this slice of `interval_runs`: `interval_runs[1, :, :]`.
+    :param all_param_names: np.array of parameters names
+    """
+    if fixed_params_map is None:
+        fixed_params_map = dict()
+    if intervals is None:
+        intervals = [np.linspace(lw[i], up[i], pieces_cnt + 1) for i in range(p)]
+    if all_param_names is None:
+        all_param_names = [f'param_{i}' for i in range(p)]
+    fixed_indices = [slice(None)] * interval_runs.ndim
+    for dim_index, value in fixed_params_map.items():
+        fixed_indices[dim_index] = value
+    interval_runs = interval_runs[tuple(fixed_indices)]
+
+    remaining_params_idx = np.setdiff1d(np.arange(p), np.array(list(fixed_params_map.keys()), dtype=int))
+    if len(remaining_params_idx) != 2:
+        raise "There should be exactly 2 non-fixed parameters left"
+    lw = lw[remaining_params_idx]
+    up = up[remaining_params_idx]
+    axes_param_names = all_param_names[remaining_params_idx]
+
     x_values = np.linspace(lw[0], up[0], pieces_cnt + 1)
     y_values = np.linspace(lw[1], up[1], pieces_cnt + 1)[::-1]
 
-    fig, axs = plt.subplots(2, 3, figsize=(24, 16))
+    fig, axs = plt.subplots(2, p + 1, figsize=(8 * (p + 1), 16))
+    plot_title = "Fixed parameters: "
+    for idx, piece in fixed_params_map.items():
+        plot_title = plot_title + all_param_names[idx] + f' in [{intervals[piece][0][idx], intervals[piece][1][idx]}]; '
+
+    fig.suptitle(plot_title, fontsize=16)
 
     imgs = []
-    cbars = []
 
-    for k in range(3):
-        imgs.append(axs[0, k].imshow(interval_runs[:, :, k, 0], cmap='YlGnBu', interpolation='nearest'))
-        axs[0, k].set_xlabel('Height')
-        axs[0, k].set_ylabel('Radius')
-        axs[0, k].set_xticks(np.arange(pieces_cnt + 1) - 0.5, [f'{x:.1f}' for x in x_values])
-        axs[0, k].set_yticks(np.arange(pieces_cnt + 1) - 0.5, [f'{y:.1f}' for y in y_values])
-        fig.colorbar(imgs[-1], ax=axs[0, k])
+    for l in range(2):
+        for k in range(p + 1):
+            imgs.append(axs[l, k].imshow(interval_runs[:, :, k, l], cmap='YlGnBu', interpolation='nearest'))
+            axs[l, k].set_xlabel(axes_param_names[0])
+            axs[l, k].set_ylabel(axes_param_names[1])
+            axs[l, k].set_xticks(np.arange(pieces_cnt + 1) - 0.5, [f'{x:.1f}' for x in x_values])
+            axs[l, k].set_yticks(np.arange(pieces_cnt + 1) - 0.5, [f'{y:.1f}' for y in y_values])
+            fig.colorbar(imgs[-1], ax=axs[l, k])
 
-        for i in range(pieces_cnt):
-            for j in range(pieces_cnt):
-                axs[0, k].text(j, i, f'{interval_runs[i, j, k, 0]:.1f}', ha='center', va='center', color='black')
+            for i in range(pieces_cnt):
+                for j in range(pieces_cnt):
+                    axs[l, k].text(j, i, f'{interval_runs[i, j, k, l]:.1f}', ha='center', va='center', color='black')
 
-    axs[0, 0].set_title('Height Error')
-    axs[0, 1].set_title('Radius Error')
-    axs[0, 2].set_title('Norm of (height, readius) error')
-
-    for k in range(3):
-        imgs.append(axs[1, k].imshow(interval_runs[:, :, k, 1], cmap='YlGnBu', interpolation='nearest'))
-        axs[1, k].set_xlabel('Height')
-        axs[1, k].set_ylabel('Radius')
-        axs[1, k].set_xticks(np.arange(pieces_cnt + 1) - 0.5, [f'{x:.1f}' for x in x_values])
-        axs[1, k].set_yticks(np.arange(pieces_cnt + 1) - 0.5, [f'{y:.1f}' for y in y_values])
-        fig.colorbar(imgs[-1], ax=axs[1, k])
-
-        for i in range(pieces_cnt):
-            for j in range(pieces_cnt):
-                axs[1, k].text(j, i, f'{interval_runs[i, j, k, 1]:.1f}', ha='center', va='center', color='black')
-
-    axs[1, 0].set_title('Height IQR')
-    axs[1, 1].set_title('Radius IQR')
-    axs[1, 2].set_title('Norm of (height, readius) IQR')
+    for k in range(p):
+        axs[0, k].set_title(f'{all_param_names[k]} Error')
+        axs[1, k].set_title(f'{all_param_names[k]} IQR')
+    axs[0, p].set_title('Norm of common error')
+    axs[1, p].set_title('Norm of common IQR')
 
     plt.tight_layout()
     plt.show()

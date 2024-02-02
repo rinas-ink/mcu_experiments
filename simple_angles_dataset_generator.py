@@ -28,7 +28,8 @@ def generate_angles_points(min_num_points, inside_angle=90, rotation_angle_x=0, 
 
 
 def main():
-    angle = generate_angles_points(100, 45, 0)
+    angle = generate_angles_points(100, 90, 0)
+    angle = dataset_generator.add_noise_to_points(angle, 0.01)
     dataset_generator.plot_points(angle)
 
 
