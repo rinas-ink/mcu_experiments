@@ -3,6 +3,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
+def default_params_names(p):
+    return np.array([f'param{i}' for i in range(p)])
+
+
 def get_control_vars(deterministic=True, dimensionality=2, size=100, lw=None, up=None):
     if lw is None:
         lw = [1] * dimensionality
@@ -13,7 +17,18 @@ def get_control_vars(deterministic=True, dimensionality=2, size=100, lw=None, up
         grid_vars = [np.linspace(lw[i], up[i], grid_size) for i in range(dimensionality)]
         grids = np.meshgrid(*grid_vars)
         return np.vstack([grid.ravel() for grid in grids]).T
-    return np.array([[np.random.random() * (up[i] - lw[i]) + lw[i] for i in range(dimensionality)] for _ in range(size)])
+    return np.array(
+        [[np.random.random() * (up[i] - lw[i]) + lw[i] for i in range(dimensionality)] for _ in range(size)])
+
+
+def put_control_vars_in_dict(control_vars, p, param_names):
+    if p != len(param_names):
+        raise 'Provide names for all parameters that match parameters of generator function'
+    result = []
+    for params in control_vars:
+        param_dict = {param_names[j]: params[j] for j in range(p)}
+        result.append(param_dict)
+    return np.array(result)
 
 
 def add_noise_to_points(points, noise_level=0.1):
@@ -68,7 +83,7 @@ def plot_points(points):
 def generate_array_of_figures(control_vars, figure_generator, noise_level=0.1, min_num_points=100):
     figures = []
     for params in control_vars:
-        points = figure_generator(min_num_points, *params)
+        points = figure_generator(min_num_points, **params)
         points = add_noise_to_points(points, noise_level)
         points = points.reshape(-1)
         figures.append(points)

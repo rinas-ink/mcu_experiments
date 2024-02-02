@@ -158,7 +158,7 @@ def plot_two_embeddings_3d(ld_embedding, reconstructed_y):
 def plot_embeddings_vs_parameters(params, embedding, param_names=None, edges=None):
     _, params_cnt = np.shape(params)
     if param_names is None:
-        param_names = [f"param_{i}" for i in range(params_cnt)]
+        param_names = dataset_generator.default_params_names(p)
     fig, axs = plt.subplots(params_cnt * (params_cnt - 1) // 2, 2, figsize=(14, params_cnt * (params_cnt - 1) * 7 / 2))
     if axs.ndim == 1:
         axs = np.array([axs])
@@ -342,7 +342,7 @@ def plot_2d_predictive_optimization_heatmaps(lw, up, pieces_cnt, interval_runs, 
     if intervals is None:
         intervals = [np.linspace(lw[i], up[i], pieces_cnt + 1) for i in range(p)]
     if all_param_names is None:
-        all_param_names = [f'param_{i}' for i in range(p)]
+        all_param_names = dataset_generator.default_params_names(p)
     fixed_indices = [slice(None)] * interval_runs.ndim
     for dim_index, value in fixed_params_map.items():
         fixed_indices[dim_index] = value
