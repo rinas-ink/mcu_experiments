@@ -19,19 +19,13 @@ def generate_cylinder_points(min_num_points, height=10, radius=5, angle_x=0):
     combinations = list(itertools.product(angles, heights))
     points = [[angle[0], angle[1], height] for angle, height in combinations]
 
-    return np.array(points)
-
-    x = radius * np.cos(angles)
-    y = radius * np.sin(angles)
-
-    points = np.column_stack((x, y, heights))
     points = dataset_generator.rotate_points(points, angle_x=angle_x)
 
     return points
 
 
 def main():
-    cylinder = generate_cylinder_points(100, 20, 5)
+    cylinder = generate_cylinder_points(100, 20, 5, 90)
     cylinder = dataset_generator.add_noise_to_points(cylinder)
     dataset_generator.plot_points(cylinder)
 
