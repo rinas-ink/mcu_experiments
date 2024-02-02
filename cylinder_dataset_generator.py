@@ -25,7 +25,7 @@ def generate_cylinder_points(min_num_points, height=10, radius=5, angle_x=0):
 
 
 def main():
-    cylinder = generate_cylinder_points(100, 20, 5, 90)
+    cylinder = generate_cylinder_points(100, 20, 5, 30)
     cylinder = dataset_generator.add_noise_to_points(cylinder)
     dataset_generator.plot_points(cylinder)
 

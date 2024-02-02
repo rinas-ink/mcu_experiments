@@ -158,7 +158,7 @@ def plot_two_embeddings_3d(ld_embedding, reconstructed_y):
 def plot_embeddings_vs_parameters(params, embedding, param_names=None, edges=None):
     _, params_cnt = np.shape(params)
     if param_names is None:
-        param_names = dataset_generator.default_params_names(p)
+        param_names = dataset_generator.default_params_names(params_cnt)
     fig, axs = plt.subplots(params_cnt * (params_cnt - 1) // 2, 2, figsize=(14, params_cnt * (params_cnt - 1) * 7 / 2))
     if axs.ndim == 1:
         axs = np.array([axs])
@@ -273,7 +273,7 @@ def predictive_optimization(y_nom, centered_y, ld_embedding, regression_matrix, 
 
 def test_predictive_optimization(lw, up, p, k, figure_generator, figure_point_cnt,
                                  centered_y, ld_embedding, regression_matrix, y_means, y_scaler,
-                                 x_stds, x_means, noise_level=0, pieces_cnt=10, test_data_size=50,
+                                 x_stds, x_means, param_names, noise_level=0, pieces_cnt=10, test_data_size=50,
                                  same_value=False):
     intervals = [np.linspace(lw[i], up[i], pieces_cnt + 1) for i in range(p)]
     interval_runs_shape = tuple([pieces_cnt] * p + [p + 1, 2])
@@ -291,7 +291,9 @@ def test_predictive_optimization(lw, up, p, k, figure_generator, figure_point_cn
                                                                dimensionality=p,
                                                                size=test_data_size,
                                                                lw=interval_lw, up=interval_up)
-        test_rolls = dataset_generator.generate_array_of_figures(test_control_vars, figure_generator,
+        test_control_vars_dict = dataset_generator.put_control_vars_in_dict(test_control_vars, p, param_names)
+
+        test_rolls = dataset_generator.generate_array_of_figures(test_control_vars_dict, figure_generator,
                                                                  noise_level=noise_level,
                                                                  min_num_points=figure_point_cnt)
         x_opts = []
