@@ -37,6 +37,10 @@ def add_noise_to_points(points, noise_level=0.1):
     return noisy_points
 
 
+def translate_points(points, translation_vector):
+    return points + translation_vector
+
+
 def rotate_points(points, angle_x=0, angle_y=0, angle_z=0):
     """
     :param points: np array of tuples [x, y, z], that represent 3d coordinates of point
@@ -77,14 +81,23 @@ def plot_points(points):
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
+    ax.view_init(elev=30, azim=60)  # set the elevation and azimuth angles
     plt.show()
 
 
-def generate_array_of_figures(control_vars, figure_generator, noise_level=0.1, min_num_points=100):
+def generate_array_of_figures(control_vars, figure_generator, noise_level=0.1, min_num_points=100, fixed_params=None):
+    if fixed_params is None:
+        fixed_params = {}
     figures = []
     for params in control_vars:
-        points = figure_generator(min_num_points, **params)
+        points = figure_generator(min_num_points, **params, **fixed_params)
         points = add_noise_to_points(points, noise_level)
-        points = points.reshape(-1)
-        figures.append(points)
-    return np.array(figures)
+        figures.append(np.array(points))
+    return figures
+
+
+def add_translations_to_figures(figures, translation_cnt):
+    """
+    Returns new dataset, that is translation_cnt^3 times bigger then original.
+
+    """
