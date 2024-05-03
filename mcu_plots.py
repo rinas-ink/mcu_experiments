@@ -62,7 +62,7 @@ class MCUplots:
         plt.show()
 
     def plot_2d_predictive_optimization_heatmaps(self, intervals, interval_runs,
-                                                 fixed_params_map=None, filename=None):
+                                                 fixed_params_map=None, filename=None, title=""):
         """
         :param intervals: interval split points for each parameter
         :param interval_runs: interval runs from `test_predictive_optimization`
@@ -85,7 +85,10 @@ class MCUplots:
         axes_param_names = params_names[remaining_params_idx]
 
         fig, axs = plt.subplots(p + 1, 2, figsize=(16, 8 * (p + 1)))
-        plot_title = "Fixed parameters: "
+        if fixed_params_map != {}:
+            plot_title = f"{title}, Fixed parameters: "
+        else:
+            plot_title = f"{title}"
         for param, bound in fixed_params_map.items():
             plot_title = plot_title + params_names[
                 param] + f' in [{intervals[param][bound], intervals[param][bound + 1]}]; '

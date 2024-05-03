@@ -11,8 +11,9 @@ class MCUexperiments:
     def __init__(self, mcu_model: MCUOriginalModel):
         self.mcu_model: MCUbase = mcu_model
 
-    def test_predictive_optimization(self, lw, up, figure_generator, figure_point_cnt, noise_level=0, pieces_cnt=10,
-                                     test_data_size=50, same_value=False, gd = False):
+    def test_predictive_optimization(self, lw, up, figure_generator, figure_point_cnt, k=None, noise_level=0,
+                                     pieces_cnt=10,
+                                     test_data_size=50, same_value=False, gd=False, baseline=False):
         p = self.mcu_model.params.shape[1]
         intervals = [np.linspace(lw[i], up[i], pieces_cnt + 1) for i in range(p)]
         interval_runs_shape = tuple([pieces_cnt] * p + [p + 1, 2])
@@ -37,7 +38,7 @@ class MCUexperiments:
                                                                        min_num_points=figure_point_cnt)
             x_opts = []
             for (figure, control_var) in zip(test_figures, test_control_vars):
-                x_opt, x_err = self.mcu_model.predict(figure, gd = gd)
+                x_opt, x_err = self.mcu_model.predict(figure, k=k, gd=gd, baseline=baseline)
                 x_opts.append(x_opt)
                 print("-----------")
                 print(f"x_opt  = {x_opt}, x_err = {x_err}")
