@@ -18,7 +18,7 @@ def generate_angles_points(min_num_points, inside_angle=90, rotation_angle_x=0, 
     """
     sqrt_num_points = int(math.ceil(math.sqrt(min_num_points / 2)))
     length = 1
-    width = 10
+    width = 1
     length_coords = np.linspace(0, length, sqrt_num_points)
     width_coords1 = np.linspace(0, width, sqrt_num_points)
     X1, Y1 = np.meshgrid(length_coords, width_coords1)

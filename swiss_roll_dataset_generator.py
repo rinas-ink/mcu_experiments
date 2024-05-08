@@ -51,3 +51,4 @@ def visualize_swiss_roll(x, y, z):
     ax.set_zlabel('Z')
     plt.show()
 
+

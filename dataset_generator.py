@@ -7,7 +7,11 @@ def default_params_names(p):
     return np.array([f'param{i}' for i in range(p)])
 
 
-def get_control_vars(deterministic=True, dimensionality=2, size=100, lw=None, up=None):
+def get_control_vars(deterministic=True, dimensionality=2, size=100, lw=None, up=None, seed=None):
+    if seed is None:
+        rand = np.random.default_rng()
+    else:
+        rand = np.random.default_rng(seed=seed)
     if lw is None:
         lw = [1] * dimensionality
     if up is None:
@@ -18,7 +22,7 @@ def get_control_vars(deterministic=True, dimensionality=2, size=100, lw=None, up
         grids = np.meshgrid(*grid_vars)
         return np.vstack([grid.ravel() for grid in grids]).T
     return np.array(
-        [[np.random.random() * (up[i] - lw[i]) + lw[i] for i in range(dimensionality)] for _ in range(size)])
+        [[rand.random() * (up[i] - lw[i]) + lw[i] for i in range(dimensionality)] for _ in range(size)])
 
 
 def put_control_vars_in_dict(control_vars, p, param_names):
@@ -74,14 +78,18 @@ def rotate_points(points, angle_x=0, angle_y=0, angle_z=0):
     return points
 
 
-def plot_points(points):
+def plot_points(points, elev=30, azim=60, limits = None):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(points[:, 0], points[:, 1], points[:, 2], s=20, c=points[:, 0], cmap=plt.cm.Spectral)
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
-    ax.view_init(elev=30, azim=60)  # set the elevation and azimuth angles
+    if limits is not None:
+        ax.set_xlim(limits)
+        ax.set_ylim(limits)
+        ax.set_zlim(limits)
+    ax.view_init(elev=elev, azim=azim)  # set the elevation and azimuth angles
     plt.show()
 
 

@@ -13,7 +13,8 @@ class MCUexperiments:
 
     def test_predictive_optimization(self, lw, up, figure_generator, figure_point_cnt, k=None, noise_level=0,
                                      pieces_cnt=10,
-                                     test_data_size=50, same_value=False, gd=False, baseline=False):
+                                     test_data_size=50, same_value=False, gd=False, baseline=False, seed=None,
+                                     symmetric=False):
         p = self.mcu_model.params.shape[1]
         intervals = [np.linspace(lw[i], up[i], pieces_cnt + 1) for i in range(p)]
         interval_runs_shape = tuple([pieces_cnt] * p + [p + 1, 2])
@@ -29,7 +30,7 @@ class MCUexperiments:
             test_control_vars = dataset_generator.get_control_vars(deterministic=False,
                                                                    dimensionality=p,
                                                                    size=test_data_size,
-                                                                   lw=interval_lw, up=interval_up)
+                                                                   lw=interval_lw, up=interval_up, seed=seed)
             test_control_vars_dict = dataset_generator.put_control_vars_in_dict(test_control_vars, p,
                                                                                 self.mcu_model.params_names)
 
@@ -38,7 +39,7 @@ class MCUexperiments:
                                                                        min_num_points=figure_point_cnt)
             x_opts = []
             for (figure, control_var) in zip(test_figures, test_control_vars):
-                x_opt, x_err = self.mcu_model.predict(figure, k=k, gd=gd, baseline=baseline)
+                x_opt, x_err = self.mcu_model.predict(figure, k=k, gd=gd, baseline=baseline, symmetric=symmetric)
                 x_opts.append(x_opt)
                 print("-----------")
                 print(f"x_opt  = {x_opt}, x_err = {x_err}")
@@ -46,8 +47,10 @@ class MCUexperiments:
 
             x_opts = np.array(x_opts)
             test_control_vars = np.array(test_control_vars)
-            errors = x_opts - test_control_vars
+            errors = (x_opts - test_control_vars)
             errors_common = np.linalg.norm(errors, axis=1)
+            errors = errors * 100 / (up - lw)
+            errors_common = errors_common * 100 / np.linalg.norm((up - lw))
 
             interval_runs[indices] = [
                                          [np.median(abs(errors[:, dim])),

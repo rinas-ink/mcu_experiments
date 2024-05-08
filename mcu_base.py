@@ -36,9 +36,12 @@ class MCUbase:
         self.figures_count = params.shape[0]
         self.dists = None
         self.k_neighbors = None
+        self.avg_k = 0
+        self.prob = None
+        self.dists_scaler = None
 
     @abstractmethod
-    def k_nearest_neighbours(self, y, k=None):
+    def k_nearest_neighbours(self, y, k=None, symmetric=False):
         pass
 
     def train(self, max_iters=100, do_cliques=False, keep_mutual_only=True):
@@ -73,20 +76,34 @@ class MCUbase:
     def compute_k_neighbors(self, keep_mutual_only=True):
         self.compute_dists()
         self.k_neighbors = []
+        avg_k = 0
         for i in range(self.figures_count):
             self.k_neighbors.append(self.k_nearest_neighbors_for_fig(i))
         if not keep_mutual_only:
+            self.avg_k = self.k
             return
         for i in range(self.figures_count):
             correct_neighbors = []
             for j in self.k_neighbors[i]:
                 if i in self.k_neighbors[j]:
                     correct_neighbors.append(j)
+                    avg_k += 1
             self.k_neighbors[i] = set(correct_neighbors)
+        self.avg_k = avg_k / self.figures_count
 
     @abstractmethod
     def compute_dists(self):
         pass
+
+    def normalize_dists(self):
+        pass
+        # dists_max = np.max(self.dists)
+        # self.dists_scaler = dists_max
+        # self.dists = self.dists / self.dists_scaler
+
+    def normalize_new_distance(self, distance):
+        return distance
+        # return distance / self.dists_scaler
 
     def k_nearest_neighbors_for_fig(self, figure_idx) -> set[int]:
         distances = self.dists[figure_idx]
@@ -105,7 +122,9 @@ class MCUbase:
         ]
 
         prob = cvxpy.Problem(cvxpy.Maximize(cvxpy.trace(self.params @ self.params.T @ q)), constraints)
-        prob.solve(solver=cvxpy.SCS, verbose=False, max_iters=max_iters)
+
+        prob.solve(solver=cvxpy.SCS, verbose=True, max_iters=max_iters, eps=1e-6)
+        self.prob = prob
         # prob.solve()
         self.q = q.value
 
@@ -129,7 +148,7 @@ class MCUbase:
         return auxiliary.undo_standardize(standardized_y, means=self.params_means,
                                           stds=self.params_stds)
 
-    def predict(self, figure, k=None, gd=False, plot_loss=False, baseline=False):
+    def predict(self, figure, k=None, gd=False, plot_loss=False, baseline=False, symmetric=False):
         neighbors_cnt = k
         if k is None:
             neighbors_cnt = self.k
@@ -137,14 +156,14 @@ class MCUbase:
             prediction, loss = self.predictive_optimization_gd(figure)
         else:
             prediction, loss = self.predictive_optimization(y_nom=figure, plot_loss=plot_loss, k=neighbors_cnt,
-                                                            baseline=baseline)
+                                                            baseline=baseline, symmetric=symmetric)
         prediction = auxiliary.undo_standardize(prediction, means=self.params_means, stds=self.params_stds)
         return prediction, loss
 
-    def predictive_optimization(self, y_nom, k, plot_loss, baseline, seed=-1):
+    def predictive_optimization(self, y_nom, k, plot_loss, baseline, seed=-1, symmetric=False):
         t0 = time.time()
         y_nom = self.center_and_scale_figure(y_nom)
-        neighbours, distances = self.k_nearest_neighbours(y_nom, k)
+        neighbours, distances = self.k_nearest_neighbours(y_nom, k, symmetric)
         t1 = time.time()
 
         lw = [-1.8] * self.params_dim
@@ -182,7 +201,7 @@ class MCUbase:
         if seed == -1:
             x_opt = dual_annealing(loss, bounds=list(zip(lw, up)), maxfun=1000, maxiter=1)
         else:
-            x_opt = dual_annealing(loss, bounds=list(zip(lw, up)), seed=seed, maxfun=1000, maxiter=3)
+            x_opt = dual_annealing(loss, bounds=list(zip(lw, up)), seed=seed, maxfun=10000, maxiter=3)
         t2 = time.time()
         print(f"Finding neighbors: {int((t1 - t0) * 1000)} ms , optimization: {int((t2 - t1) * 1000)} ms")
         return x_opt.x, loss(x_opt.x)

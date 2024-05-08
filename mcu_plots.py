@@ -4,6 +4,7 @@ from matplotlib.collections import LineCollection
 
 import dataset_generator
 from mcu_original import MCUOriginalModel
+import matplotlib.colors as mcolors
 
 
 class MCUplots:
@@ -14,6 +15,7 @@ class MCUplots:
         params = self.mcu_model.original_params
         params_names = self.mcu_model.params_names
         embedding = self.mcu_model.embedded_y_as_params()
+        # embedding = self.mcu_model.embedded_y
         edges = self.mcu_model.graph_edges
         _, params_cnt = np.shape(params)
         fig, axs = plt.subplots(params_cnt * (params_cnt - 1) // 2, 2,
@@ -62,13 +64,31 @@ class MCUplots:
         plt.show()
 
     def plot_2d_predictive_optimization_heatmaps(self, intervals, interval_runs,
-                                                 fixed_params_map=None, filename=None, title=""):
+                                                 fixed_params_map=None, filename=None, title="", lw=0, up=5,
+                                                 count_greater_than=None):
         """
         :param intervals: interval split points for each parameter
         :param interval_runs: interval runs from `test_predictive_optimization`
         :param fixed_params_map: dictionary, that represents which parameter at which piece we fix.
         For example {0:1}, when p=3, means that we make this slice of `interval_runs`: `interval_runs[1, :, :]`.
         """
+        p = self.mcu_model.params_dim
+
+        cnt = np.empty(shape=(p + 1, 2), dtype=int)
+        median = np.empty(shape=(p + 1, 2, 2))
+        for i in range(p + 1):
+            median[i, 0, 0] = np.median(interval_runs[..., i, 0])
+            median[i, 1, 0] = np.median(interval_runs[..., i, 1])
+            if count_greater_than is not None:
+                cnt[i, 0] = np.sum(interval_runs[..., i, 0] > count_greater_than)
+                cnt[i, 1] = np.sum(interval_runs[..., i, 1] > count_greater_than)
+                filtered_values_0 = interval_runs[..., i, 0][interval_runs[..., i, 0] > count_greater_than]
+                median[i, 0, 1] = np.median(filtered_values_0)
+                filtered_values_1 = interval_runs[..., i, 1][interval_runs[..., i, 1] > count_greater_than]
+                median[i, 1, 1] = np.median(filtered_values_1)
+
+        cell_cnt = np.prod(interval_runs.shape[:-2])
+
         if fixed_params_map is None:
             fixed_params_map = dict()
         fixed_indices = [slice(None)] * interval_runs.ndim
@@ -77,14 +97,14 @@ class MCUplots:
         interval_runs = interval_runs[tuple(fixed_indices)]
         pieces_cnt = interval_runs.shape[0]
         params_names = self.mcu_model.params_names
-        p = self.mcu_model.params.shape[1]
 
         remaining_params_idx = np.setdiff1d(np.arange(p), np.array(list(fixed_params_map.keys()), dtype=int))
         if len(remaining_params_idx) != 2:
             raise "There should be exactly 2 non-fixed parameters left"
         axes_param_names = params_names[remaining_params_idx]
 
-        fig, axs = plt.subplots(p + 1, 2, figsize=(16, 8 * (p + 1)))
+        # fig, axs = plt.subplots(p + 1, 2, figsize=(16, 8 * (p + 1)))
+        fig, axs = plt.subplots(p, 2, figsize=(16, 8 * p))
         if fixed_params_map != {}:
             plot_title = f"{title}, Fixed parameters: "
         else:
@@ -94,28 +114,44 @@ class MCUplots:
                 param] + f' in [{intervals[param][bound], intervals[param][bound + 1]}]; '
 
         fig.suptitle(plot_title, fontsize=16)
-
+        my_cmap = plt.get_cmap('YlGnBu').copy()  # Get a copy of the YlGnBu colormap
+        my_cmap.set_under('white')  # Set under-value color
+        my_cmap.set_over('grey')
+        my_cmap_norm = mcolors.Normalize(vmin=lw, vmax=up)
         imgs = []
 
         for l in range(2):
-            for k in range(p + 1):
-                imgs.append(axs[k, l].imshow(interval_runs[:, :, k, l], cmap='YlGnBu', interpolation='nearest'))
-                axs[k, l].set_xlabel(axes_param_names[0])
-                axs[k, l].set_ylabel(axes_param_names[1])
-                axs[k, l].set_xticks(np.arange(pieces_cnt + 1) - 0.5, [f'{x:.1f}' for x in intervals[0]])
-                axs[k, l].set_yticks(np.arange(pieces_cnt + 1) - 0.5, [f'{y:.1f}' for y in intervals[1]])
+            for k in range(p):
+                imgs.append(axs[k, l].imshow(interval_runs[:, :, k, l], cmap=my_cmap, norm=my_cmap_norm,
+                                             interpolation='nearest'))
+                axs[k, l].set_xlabel(axes_param_names[0], fontsize=12)
+                axs[k, l].set_ylabel(axes_param_names[1], fontsize=12)
+                axs[k, l].set_xticks(np.arange(pieces_cnt + 1) - 0.5, [f'{x:.1f}' for x in intervals[0]], fontsize=12)
+                axs[k, l].set_yticks(np.arange(pieces_cnt + 1) - 0.5, [f'{y:.1f}' for y in intervals[1]], fontsize=12)
                 fig.colorbar(imgs[-1], ax=axs[k, l])
 
                 for i in range(pieces_cnt):
                     for j in range(pieces_cnt):
                         axs[k, l].text(j, i, f'{interval_runs[i, j, k, l]:.1f}', ha='center', va='center',
-                                       color='black')
+                                       color='black', fontsize=12)
+                axs[k, l].text(0.5, -0.15,
+                               f'Median = {median[k, l, 0]:.2f}', ha='center', va='center',
+                               transform=axs[k, l].transAxes, fontsize=12, color='blue')
+                if count_greater_than is not None:
+                    axs[k, l].text(0.5, -0.20,
+                                   f'{cnt[k, l]} of {cell_cnt} cells are > {count_greater_than}',
+                                   ha='center', va='center',
+                                   transform=axs[k, l].transAxes, fontsize=12, color='blue')
+                    axs[k, l].text(0.5, -0.25,
+                                   f'Median among values >1  = {median[k, l, 1]:.2f}',
+                                   ha='center', va='center',
+                                   transform=axs[k, l].transAxes, fontsize=12, color='blue')
 
         for k in range(p):
             axs[k, 0].set_title(f'{params_names[k]} Error')
             axs[k, 1].set_title(f'{params_names[k]} IQR')
-        axs[p, 0].set_title('Norm of common error')
-        axs[p, 1].set_title('Norm of common IQR')
+        # axs[p, 0].set_title('Norm of common error')
+        # axs[p, 1].set_title('Norm of common IQR')
 
         plt.tight_layout()
 

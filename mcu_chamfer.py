@@ -55,12 +55,22 @@ class MCUChamferModel(MCUbase):
                 # self.dists[i, j] = np.array([(dist1 + dist2) / 2, dist1, dist2])
                 self.dists[i, j] = auxiliary.symmetric_chamfer_dist(points1, tree1, points2, tree2)
                 self.dists[j, i] = self.dists[i, j]
+        self.normalize_dists()
 
     def center_and_scale_figure(self, figure):
         return figure / self.figures_scaler
         # return (figure - np.mean(figure, axis=0)) / self.figures_scaler
 
-    def k_nearest_neighbours(self, points, k=None):
+    def k_nearest_neighbours(self, points, k=None, symmetric=False):
+        if symmetric:
+            neighbors, distances = self.k_nearest_neighbours_sym(points, k)
+        else:
+            neighbors, distances = self.k_nearest_neighbours_asym(points, k)
+        distances = self.normalize_new_distance(distances)
+        print(distances)
+        return neighbors, distances
+
+    def k_nearest_neighbours_asym(self, points, k=None):
         neighbor_cnt = k
         if k is None:
             neighbor_cnt = self.k
@@ -72,17 +82,17 @@ class MCUChamferModel(MCUbase):
         neighbours = np.argsort(distances, kind='stable')[:neighbor_cnt]
         return neighbours, distances[neighbours]
 
-    # def k_nearest_neighbours(self, points, k=None):
-    #     neighbor_cnt = k
-    #     if k is None:
-    #         neighbor_cnt = self.k
-    #     distances = []
-    #     points1 = points.reshape(-1, 3)
-    #     tree1 = KDTree(points1)
-    #     for i in range(self.figures_count):
-    #         tree2 = self.KD_figures_trees[i]
-    #         points2 = self.figures[i]
-    #         distances.append(auxiliary.symmetric_chamfer_dist(points1, tree1, points2, tree2))
-    #     distances = np.array(distances)
-    #     neighbours = np.argsort(distances, kind='stable')[:neighbor_cnt]
-    #     return neighbours, distances[neighbours]
+    def k_nearest_neighbours_sym(self, points, k=None):
+        neighbor_cnt = k
+        if k is None:
+            neighbor_cnt = self.k
+        distances = []
+        points1 = points.reshape(-1, 3)
+        tree1 = KDTree(points1)
+        for i in range(self.figures_count):
+            tree2 = self.KD_figures_trees[i]
+            points2 = self.figures[i]
+            distances.append(auxiliary.symmetric_chamfer_dist(points1, tree1, points2, tree2))
+        distances = np.array(distances)
+        neighbours = np.argsort(distances, kind='stable')[:neighbor_cnt]
+        return neighbours, distances[neighbours]

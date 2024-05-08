@@ -31,15 +31,17 @@ class MCUOriginalModel(MCUbase):
             for j in range(i + 1, self.figures_count):
                 self.dists[i, j] = np.linalg.norm(self.figures[i] - self.figures[j]) / self.figures.shape[1]
                 self.dists[j, i] = self.dists[i, j]
+        self.normalize_dists()
 
     def center_and_scale_figure(self, figure):
         figure = figure.reshape(-1)
         return (figure - self.figures_means) / self.figures_scaler
 
-    def k_nearest_neighbours(self, y, k=None):
+    def k_nearest_neighbours(self, y, k=None, symmetric=False):
         neighbor_cnt = k
         if k is None:
             neighbor_cnt = self.k
         distances = np.linalg.norm(self.figures - y, axis=1) / self.figures.shape[1]
+        distances = self.normalize_new_distance(distances)
         neighbours = np.argsort(distances, kind='stable')[:neighbor_cnt + 1]
         return neighbours, distances[neighbours]
