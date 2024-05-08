@@ -19,7 +19,13 @@ def generate_swiss_roll(min_num_points, c1, c2):
     r = 1 + c2 / 10
     x_val = (4 / 9 * c1 + 50 / 9) * X * np.cos(2 * np.pi * r * (X - 4) / 12)
     z_val = (4 / 9 * c1 + 50 / 9) * X * np.sin(2 * np.pi * r * (X - 4) / 12)
-    points = np.column_stack((x_val, Y, z_val)).T
+    points = np.column_stack((x_val, Y, z_val))
+    points = points - np.mean(points, axis=0)
+    # new_points = []
+    # for i in range(points.shape[0]):
+    #     if points[i, 1] > 0 and points[i, 1] >0:
+    #         new_points.append(points[i, :])
+    # points = np.array(new_points)
     return points
 
 
@@ -44,4 +50,5 @@ def visualize_swiss_roll(x, y, z):
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     plt.show()
+
 

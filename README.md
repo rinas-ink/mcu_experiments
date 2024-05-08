@@ -1,30 +1,18 @@
-## Maximum Covariance Unfolding Regression
 
-### Goal
+# Experiment setup for Maximum Covariance Unfolding Regression
 
-Extend a [viny SLAM](https://sci-hub.se/10.1109/IROS.2017.8206595) algorithm in 3d space that runs on low-cost devices as robust, accurate and fast as state of the art algorithms, but requiring fewer resources to run.
+In the following repository there is implementation of MCU method from the corresponding article 
+[Maximum Covariance Unfolding Regression: A Novel Covariate-based Manifold Learning Approach for Point Cloud Data](https://arxiv.org/abs/2303.17852) 
+by Qian Wang and Kamran Paynabar.
 
-### Approaches
+The original method is implemented in `MCUOriginalModel` class 
+([`mcu_original.py`](mcu_original.py)).
 
-[Maximum Covariance Unfolding Regression Article](https://arxiv.org/pdf/2303.17852.pdf)
+The modified version with distance metric replaced by Chamfer distance is implemented in `MCUChamferModel` class
+([`mcu_chamfer.py`](mcu_chamfer.py)).
 
-[Unsupervised Learning of Image Manifolds by Semidefinite Programming](https://sci-hub.se/10.1007/s11263-005-4939-z)
+Dataset generators for cylinders, angles and Swiss rolls are in [`cylinder_dataset_generator.py`](cylinder_dataset_generator.py),
+[`simple_angles_dataset_generator.py`](simple_angles_dataset_generator.py) and [`swiss_roll_dataset_generator.py`](swiss_roll_dataset_generator.py)
+correspondingly.
 
-Hypothesis: This approaches reduces the dimensionality of features in the map if the map is represented by a point cloud or a picture
-
-### How can we use hypotheses
-
- * Usually a lot of resources are spent on loop detection, scan matching is used for that. We can try to use mcu to detect a place, where we have already been + understand the angle of view
- * We can do an initial "check" with less accurate, but faster methods, e.g. computer vision methods, match part of the image and part of the point cloud and analyse part of the point cloud in more detail
-   
- -- The image can be compressed or segmented to reduce processing time.
- 
- -- Find out what exactly is the angle using a camera and its exact characteristics using lidar 
- 
-When it can be useful:
- 
- -- there is a lot of free space in front of the robot, there are corners on the right and left side
- 
- -- too many corners, robots needs to quickly understand where to move. The robot divides the picture into parts of the possible direction of movement, analyses and takes the first suitable one
- 
- * try to use mcu based on the picture or try the Weinberger and Saul algorithm that works with the picture.
+Whole pipelines of original and modified methods can be found in python notebooks `<method>_<figure_type>_pipeline_<parameter dimentionality>d.ipynb`.
